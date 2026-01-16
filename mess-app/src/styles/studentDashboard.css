@@ -1,0 +1,156 @@
+/* =========================
+   LAYOUT
+========================= */
+
+.student-dashboard {
+  max-width: 1000px;
+  margin: auto;
+  padding: 20px;
+}
+
+.welcome {
+  margin-bottom: 20px;
+}
+
+/* TOP GRID (ONLY STUDENT + MESS INFO) */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  margin-bottom: 10px;
+}
+
+/* GENERAL CARD */
+.card {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+}
+
+/* FULL WIDTH CARDS (DOWN SECTION) */
+.card.full {
+  margin-top: 16px;
+}
+
+/* HEADINGS */
+.card h3 {
+  margin-bottom: 10px;
+}
+
+/* TEXT HELPERS */
+.muted {
+  color: #888;
+}
+
+/* STATUS COLORS */
+.status.active,
+.on {
+  color: green;
+  font-weight: bold;
+}
+
+.status.inactive,
+.off {
+  color: red;
+  font-weight: bold;
+}
+
+/* NOTICE */
+.notice {
+  margin-top: 10px;
+  background: #f4f6f8;
+  padding: 10px;
+  border-left: 4px solid #0d6efd;
+  border-radius: 6px;
+}
+
+/* PAYMENT STATUS */
+.pending-msg {
+  color: orange;
+  font-weight: bold;
+}
+
+.paid-msg {
+  color: green;
+  font-weight: bold;
+}
+
+/* =========================
+   CURRENT PAYMENT CARD
+========================= */
+
+.payment-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.info-btn {
+  background: #ede9fe;
+  color: #6d28d9;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.info-btn:hover {
+  background: #ddd6fe;
+}
+
+/* PAY BUTTON */
+.pay-btn {
+  margin-top: 10px;
+  background: #0d6efd;
+  color: #fff;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.pay-btn:hover {
+  background: #084ec2;
+}
+
+/* =========================
+   FORMS (POPUPS)
+========================= */
+
+.method {
+  margin: 10px 0;
+}
+
+.method label {
+  margin-right: 15px;
+}
+
+.upi-box {
+  margin-bottom: 10px;
+}
+
+.upi-box img {
+  width: 160px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+}
+
+input[type="number"],
+input[type="file"] {
+  width: 100%;
+  margin: 8px 0;
+  padding: 8px;
+}
+
+/* =========================
+   MOBILE RESPONSIVE
+========================= */
+
+@media (max-width: 768px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}

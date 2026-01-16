@@ -1,0 +1,109 @@
+/* ===============================
+   PAGE WRAPPER
+================================ */
+.pending-page {
+  padding: 16px;
+  min-height: 100vh;
+  background: #f8fafc;
+  font-family: "Inter", system-ui, sans-serif;
+}
+
+.page-title {
+  font-size: 22px;
+  font-weight: 700;
+  margin-bottom: 16px;
+}
+
+.muted {
+  color: #64748b;
+  font-size: 14px;
+}
+
+/* ===============================
+   GRID
+================================ */
+.pending-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+
+/* ===============================
+   STUDENT CARD
+================================ */
+.student-card {
+  background: #ffffff;
+  border-radius: 14px;
+  padding: 14px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.student-card.pending {
+  border-left: 4px solid #f59e0b;
+}
+
+.student-info h4 {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.student-info p {
+  font-size: 13px;
+  color: #475569;
+  margin-bottom: 4px;
+}
+
+/* ===============================
+   ACTION BUTTONS
+================================ */
+.student-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.btn {
+  flex: 1;
+  border: none;
+  padding: 10px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* Approve */
+.btn.approve {
+  background: #10b981;
+  color: #ffffff;
+}
+
+.btn.approve:hover {
+  background: #059669;
+}
+
+/* Reject */
+.btn.reject {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.btn.reject:hover {
+  background: #fecaca;
+}
+
+/* ===============================
+   DESKTOP
+================================ */
+@media (min-width: 768px) {
+  .pending-page {
+    padding: 24px 40px;
+  }
+
+  .pending-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}

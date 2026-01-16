@@ -1,0 +1,61 @@
+.navbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+
+  width: 100%;
+  background: #ffffff;
+  border-bottom: 1px solid #ddd;
+
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  padding: 10px 14px;
+}
+
+.navbar-title {
+  font-weight: 600;
+  font-size: 15px;
+  white-space: nowrap;
+}
+
+.navbar-links {
+  display: flex;
+  gap: 8px;
+  flex: 1;
+}
+
+.navbar-links a {
+  font-size: 13px;
+  color: #2e7d32;
+  text-decoration: none;
+}
+
+.navbar-btn {
+  background: #2e7d32;
+  color: #fff;
+  padding: 8px 14px;
+  font-size: 13px;
+  border-radius: 6px;
+  border: none;
+  white-space: nowrap;
+}
+
+/* =========================
+   LANDING PAGE BACKGROUND
+   (WITHOUT TOUCHING JSX)
+========================= */
+
+.container {
+  min-height: calc(100vh - 56px); /* navbar height */
+  width: 100%;
+
+  background-image: url("./assets/home-bg.png");
+  background-repeat: no-repeat;
+  background-position: center top;
+  background-size: cover;
+
+  /* keeps text readable if any */
+  padding: 20px;
+}

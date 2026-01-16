@@ -1,0 +1,80 @@
+/* =========================
+   ADMIN LOGIN PAGE
+========================= */
+
+.admin-login {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.admin-login-box {
+  width: 100%;
+  max-width: 420px;
+  background: #ffffff;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+}
+
+.admin-login h2 {
+  margin-bottom: 16px;
+  text-align: center;
+}
+
+/* ROLE TOGGLE */
+.role-toggle {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.role-btn {
+  flex: 1;
+  padding: 10px 0;
+  background: #ffffff;
+  color: #2e7d32;
+  border: 2px solid #2e7d32;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.role-btn.active {
+  background: #2e7d32;
+  color: #ffffff;
+}
+
+/* INPUTS */
+.admin-login input {
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 12px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-size: 15px;
+}
+
+/* LOGIN BUTTON */
+.admin-login button.login-btn {
+  width: 100%;
+  padding: 12px;
+  background: #2e7d32;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.admin-login button.login-btn:active {
+  opacity: 0.9;
+}
+
+/* ERROR */
+.login-error {
+  color: red;
+  font-size: 13px;
+  margin-bottom: 10px;
+}

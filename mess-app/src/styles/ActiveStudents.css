@@ -1,0 +1,63 @@
+/* =========================
+   ACTIVE STUDENTS PAGE
+========================= */
+
+.active-students-container {
+  padding: 1.5rem;
+}
+
+.active-students-title {
+  margin-bottom: 1rem;
+  font-size: 1.4rem;
+  font-weight: 600;
+}
+
+/* TABLE */
+.active-students-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #ffffff;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+/* HEADER */
+.active-students-table thead {
+  background: #f3f4f6;
+}
+
+.active-students-table th {
+  padding: 0.75rem;
+  text-align: left;
+  font-weight: 600;
+  color: #374151;
+  font-size: 0.9rem;
+}
+
+/* ROWS */
+.active-students-table td {
+  padding: 0.7rem;
+  border-bottom: 1px solid #e5e7eb;
+  font-size: 0.9rem;
+}
+
+.active-students-table tr:hover {
+  background: #f9fafb;
+}
+
+/* EMPTY STATE */
+.no-students {
+  padding: 1rem;
+  color: #6b7280;
+}
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+  .active-students-table {
+    font-size: 0.85rem;
+  }
+
+  .active-students-container {
+    padding: 1rem;
+  }
+}
