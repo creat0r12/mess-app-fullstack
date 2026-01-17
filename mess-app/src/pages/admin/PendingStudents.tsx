@@ -24,7 +24,7 @@ const PendingStudents = () => {
     try {
       setLoading(true);
 
-      const res = await fetch(`${API_ROOT}/api/students/pending`, {
+      const res = await fetch(`${API_ROOT}/api/admin/pending`, {
         headers: {
           Authorization: `Bearer ${getToken()}`,
         },
@@ -65,7 +65,7 @@ const PendingStudents = () => {
 
     try {
       const res = await fetch(
-        `${API_ROOT}/api/students/${action}/${id}`,
+        `${API_ROOT}/api/admin/${action}/${id}`,
         {
           method: "PUT",
           headers: {

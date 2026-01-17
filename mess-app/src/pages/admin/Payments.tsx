@@ -159,10 +159,12 @@ const Payments = () => {
 
       {selected && (
         <PaymentInfoModal
-          payment={selected}
-          history={history}
-          onClose={() => setSelected(null)}
-        />
+           payment={selected}
+            history={history}
+            onClose={() => setSelected(null)}
+            isAdmin={true}
+/>
+
       )}
     </div>
   );

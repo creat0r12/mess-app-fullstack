@@ -2,10 +2,11 @@ const express = require("express");
 const router = express.Router();
 const auth = require("../middlewares/auth.middleware");
 const controller = require("../controllers/admin.controller");
+const upload = require("../middlewares/uploadPayment");
 
 // ✅ Pending students
 router.get(
-  "/pending-students",
+  "/pending",
   auth,
   controller.getPendingStudents
 );
@@ -26,7 +27,7 @@ router.put(
 
 // ✅ Active students
 router.get(
-  "/active-students",
+  "/active",
   auth,
   controller.getActiveStudents
 );
@@ -38,20 +39,26 @@ router.put(
   controller.deactivateStudent
 );
 
-router.get("/dashboard-stats", auth, controller.getDashboardStats);
+// ✅ Dashboard stats
+router.get(
+  "/dashboard-stats",
+  auth,
+  controller.getDashboardStats
+);
 
+// ✅ Payment settings (GET)
+router.get(
+  "/payment-settings",
+  auth,
+  controller.getPaymentSettings
+);
 
-router.get("/payment-settings", auth, controller.getPaymentSettings);
-const upload = require("../middlewares/uploadPayment");
-
+// ✅ Payment settings (UPDATE)
 router.post(
   "/payment-settings",
   auth,
   upload.single("qr"),
   controller.updatePaymentSettings
 );
-
-
-
 
 module.exports = router;

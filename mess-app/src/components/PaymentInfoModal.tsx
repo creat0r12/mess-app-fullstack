@@ -52,28 +52,20 @@ const PaymentInfoModal = ({
   const [expandedKey, setExpandedKey] = useState<string>("current");
   const [previewImg, setPreviewImg] = useState<string | null>(null);
 
-  /* ================= FILTER HISTORY =================
-     History = ONLY completed & approved months
-  ==================================================== */
+  /* ================= FILTER HISTORY ================= */
   const validHistory = history.filter(
     (h) => h.status === "PAID" && h.proof_url
   );
 
-  /* ================= STATUS LOGIC (FINAL) ================= */
+  /* ================= STATUS LOGIC ================= */
   const getUIStatus = (): "DUE" | "PENDING" | "ACTIVE" | "PAID" => {
-    // 🟤 Pending overrides everything
     if (payment.status === "PENDING") return "PENDING";
 
     const paid = payment.paid_amount || 0;
     const total = payment.amount;
 
-    // 🔴 Nothing paid
     if (paid === 0) return "DUE";
-
-    // 🟣 Partial payment
     if (paid > 0 && paid < total) return "ACTIVE";
-
-    // 🟢 Fully paid
     if (paid >= total) return "PAID";
 
     return "DUE";
@@ -81,44 +73,48 @@ const PaymentInfoModal = ({
 
   const uiStatus = getUIStatus();
 
-  /* ================= SUMMARY SOURCE ================= */
+  /* ================= SUMMARY ================= */
   const selectedSummary =
     expandedKey === "current"
       ? {
-          total: payment.amount,
-          paid: payment.paid_amount || 0,
-          due: payment.due_amount,
-          status: uiStatus,
-        }
+        total: payment.amount,
+        paid: payment.paid_amount || 0,
+        due: payment.due_amount,
+        status: uiStatus,
+      }
       : (() => {
-          const index = Number(expandedKey.split("-")[1]);
-          const h = validHistory[index];
-          return {
-            total: h.amount,
-            paid: h.amount,
-            due: 0,
-            status: "PAID" as const,
-          };
-        })();
+        const index = Number(expandedKey.split("-")[1]);
+        const h = validHistory[index];
+        return {
+          total: h.amount,
+          paid: h.amount,
+          due: 0,
+          status: "PAID" as const,
+        };
+      })();
 
-  /* ================= ACTIONS (ADMIN ONLY) ================= */
+  /* ================= ACTIONS ================= */
   const handleAccept = async () => {
+    if (!token) return alert("Unauthorized");
     if (!window.confirm("Accept this payment?")) return;
 
     await fetch(`${API}/api/payments/accept/${payment.id}`, {
       method: "PUT",
       headers: { Authorization: `Bearer ${token}` },
     });
+
     onClose();
   };
 
   const handleReject = async () => {
+    if (!token) return alert("Unauthorized");
     if (!window.confirm("Reject this payment?")) return;
 
     await fetch(`${API}/api/payments/reject/${payment.id}`, {
       method: "PUT",
       headers: { Authorization: `Bearer ${token}` },
     });
+
     onClose();
   };
 
@@ -165,7 +161,7 @@ const PaymentInfoModal = ({
         {/* TRANSACTIONS */}
         <h4 className="section-title">Transactions</h4>
 
-        {/* CURRENT PAYMENT */}
+        {/* CURRENT */}
         <div
           className={`txn ${expandedKey === "current" ? "big expanded" : "small"}`}
           onClick={() => setExpandedKey("current")}
@@ -190,7 +186,7 @@ const PaymentInfoModal = ({
           )}
         </div>
 
-        {/* PREVIOUS PAYMENTS (PAID ONLY) */}
+        {/* HISTORY */}
         {validHistory.map((h, i) => {
           const key = `h-${i}`;
           const expanded = expandedKey === key;
@@ -224,12 +220,17 @@ const PaymentInfoModal = ({
         })}
 
         {/* ADMIN ACTIONS */}
-        {isAdmin && uiStatus === "PENDING" && (
+        {isAdmin && payment.status === "PENDING" && (
           <div className="modal-actions">
-            <button className="accept-btn" onClick={handleAccept}>Accept</button>
-            <button className="reject-btn" onClick={handleReject}>Reject</button>
+            <button className="accept-btn" onClick={handleAccept}>
+              Accept
+            </button>
+            <button className="reject-btn" onClick={handleReject}>
+              Reject
+            </button>
           </div>
         )}
+
       </div>
 
       {/* IMAGE PREVIEW */}

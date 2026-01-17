@@ -1,23 +1,17 @@
 const express = require("express");
 const router = express.Router();
 const controller = require("../controllers/student.controller");
-const auth = require("../middlewares/auth.middleware");
 
 // 🧑‍🎓 STUDENT REQUEST (PUBLIC)
 router.post("/request", controller.requestStudent);
 
-// 🧧 STUDENT LOGIN (PUBLIC)
+// 📱 VERIFY PHONE
 router.post("/verify", controller.verifyStudent);
+
+// 🔐 SET PASSWORD
 router.post("/set-password", controller.setStudentPassword);
+
+// 🔑 LOGIN
 router.post("/login", controller.loginStudent);
-
-// 👨‍💼 ADMIN ROUTES (PROTECTED)
-router.get("/pending", auth, controller.getPendingStudents);
-router.put("/approve/:id", auth, controller.approveStudent);
-router.put("/reject/:id", auth, controller.rejectStudent);
-router.get("/active", auth, controller.getActiveStudents);
-
-router.get("/", auth, controller.getAllStudents);
-
 
 module.exports = router;

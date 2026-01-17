@@ -26,87 +26,132 @@ exports.getPendingStudents = (req, res) => {
 exports.approveStudent = (req, res) => {
   const { id } = req.params;
 
-  // 1️⃣ Activate student
+  // 1️⃣ Get student (joining date + gender + status)
   db.query(
-    "UPDATE students SET status='ACTIVE' WHERE id=?",
+    "SELECT id, created_at, gender, status FROM students WHERE id = ?",
     [id],
-    (err) => {
+    (err, students) => {
       if (err) {
-        console.error("Approve student error:", err);
+        console.error("Get student error:", err);
         return res.status(500).json({ message: "DB error" });
       }
 
-      // 2️⃣ Check if payment already exists (current cycle)
+      if (students.length === 0) {
+        return res.status(404).json({ message: "Student not found" });
+      }
+
+      const student = students[0];
+
+      // 🔒 Prevent duplicate approval
+      if (student.status === "ACTIVE") {
+        return res.status(400).json({
+          message: "Student is already approved",
+        });
+      }
+
+      // 2️⃣ Activate student
       db.query(
-        `
-        SELECT id FROM payments
-        WHERE student_id = ?
-          AND status IN ('DUE','PENDING')
-        `,
+        "UPDATE students SET status='ACTIVE' WHERE id=?",
         [id],
-        (err2, rows) => {
+        (err2) => {
           if (err2) {
-            console.error("Payment check error:", err2);
+            console.error("Approve error:", err2);
             return res.status(500).json({ message: "DB error" });
           }
 
-          if (rows.length > 0) {
-            return res.json({
-              message: "Student approved (payment already exists)",
-            });
-          }
+          // 3️⃣ Calculate cycle dates
+          const startDate = new Date(student.created_at);
+          const endDate = new Date(startDate);
+          endDate.setDate(endDate.getDate() + 30);
 
-          // 3️⃣ Get student gender
+          // 4️⃣ Create student cycle
           db.query(
-            "SELECT gender FROM students WHERE id=?",
-            [id],
-            (err3, studentRows) => {
-              if (err3 || studentRows.length === 0) {
-                return res.status(500).json({ message: "Student not found" });
+            `
+            INSERT INTO student_cycles
+            (student_id, cycle_start_date, cycle_end_date)
+            VALUES (?, ?, ?)
+            `,
+            [
+              student.id,
+              startDate.toISOString().slice(0, 10),
+              endDate.toISOString().slice(0, 10),
+            ],
+            (err3, cycleResult) => {
+              if (err3) {
+                console.error("Cycle creation error:", err3);
+                return res
+                  .status(500)
+                  .json({ message: "Cycle creation failed" });
               }
 
-              const gender = studentRows[0].gender;
+              const cycleId = cycleResult.insertId;
 
-              // 4️⃣ Get CURRENT payment settings (future rule)
+              // 5️⃣ Get amount from payment_settings
               db.query(
                 `
                 SELECT boys_monthly_amount, girls_monthly_amount
                 FROM payment_settings
                 WHERE id = 1
                 `,
-                (err4, settingsRows) => {
+                (err4, settings) => {
                   if (err4) {
+                    console.error("Payment settings error:", err4);
                     return res.status(500).json({ message: "DB error" });
                   }
 
                   const amount =
-                    gender === "GIRL"
-                      ? settingsRows[0].girls_monthly_amount
-                      : settingsRows[0].boys_monthly_amount;
+                    student.gender === "FEMALE"
+                      ? settings[0].girls_monthly_amount
+                      : settings[0].boys_monthly_amount;
 
-                  // 5️⃣ Create NEW payment cycle (FREEZE amount)
-                  const now = new Date();
-                  const month = now.toLocaleString("default", {
+                  const monthName = startDate.toLocaleString("default", {
                     month: "long",
                   });
-                  const year = now.getFullYear();
+                  const year = startDate.getFullYear();
 
+                  // 6️⃣ Create payment (linked to student_cycles)
                   db.query(
                     `
                     INSERT INTO payments
-                      (student_id, amount, due_amount, payment_month, payment_year, status)
-                    VALUES (?, ?, ?, ?, ?, 'DUE')
+                    (
+                      student_id,
+                      cycle_id,
+                      amount,
+                      due_amount,
+                      paid_amount,
+                      payment_month,
+                      payment_year,
+                      status
+                    )
+                    VALUES (?, ?, ?, ?, 0, ?, ?, 'DUE')
                     `,
-                    [id, amount, amount, month, year],
+                    [
+                      student.id,
+                      cycleId,
+                      amount,
+                      amount,
+                      monthName,
+                      year,
+                    ],
                     (err5) => {
                       if (err5) {
-                        console.error("Create payment error:", err5);
-                        return res.status(500).json({ message: "DB error" });
+                        console.error("Payment creation error:", err5);
+
+                        // 🛡️ Safety: close the cycle if payment fails
+                        db.query(
+                          "UPDATE student_cycles SET status='COMPLETED' WHERE id=?",
+                          [cycleId]
+                        );
+
+                        return res.status(500).json({
+                          message:
+                            "Student approved but payment creation failed",
+                        });
                       }
 
                       res.json({
                         message:
-                          "Student approved and payment cycle started",
+                          "Student approved, personal cycle & payment created",
                       });
                     }
                   );
@@ -119,6 +164,9 @@ exports.approveStudent = (req, res) => {
     }
   );
 };
+
+
+
 
 
 
