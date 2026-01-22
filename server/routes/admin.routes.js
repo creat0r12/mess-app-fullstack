@@ -61,4 +61,35 @@ router.post(
   controller.updatePaymentSettings
 );
 
+// ✅ Create Mess Request (PUBLIC)
+router.post(
+  "/create-mess-request",
+  controller.createMessRequest
+);
+
+
+router.post("/platform-admin/login", controller.platformAdminLogin);
+router.get("/platform-admin/mess-requests", auth, controller.getMessRequests);
+
+// ✅ Approve mess request (PLATFORM ADMIN)
+router.put(
+  "/platform-admin/mess-approve/:id",
+  auth,
+  controller.approveMessRequest
+);
+
+// ✅ Reject mess request (PLATFORM ADMIN)
+router.put(
+  "/platform-admin/mess-reject/:id",
+  auth,
+  controller.rejectMessRequest
+);
+
+
+// ✅ PUBLIC: Get active messes
+router.get(
+  "/public/active-messes",
+  controller.getActiveMesses
+);
+
 module.exports = router;

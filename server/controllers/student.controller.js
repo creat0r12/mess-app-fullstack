@@ -263,3 +263,75 @@ exports.loginStudent = (req, res) => {
 
 
 
+exports.requestMessJoin = (req, res) => {
+  const { name, phone, email, mess_id, meal_slot } = req.body;
+
+  if (!name || !phone || !mess_id || !meal_slot) {
+    return res.status(400).json({ message: "Missing required fields" });
+  }
+
+  // 1️⃣ Check if user exists
+  db.query(
+    "SELECT * FROM users WHERE phone = ?",
+    [phone],
+    (err, users) => {
+      if (err) return res.status(500).json({ message: "DB error" });
+
+      const handleMembership = (user) => {
+        // 2️⃣ Save requested mess
+        db.query(
+          "UPDATE users SET requested_mess_id = ?, role = 'STUDENT' WHERE id = ?",
+          [mess_id, user.id],
+          (err2) => {
+            if (err2) return res.status(500).json({ message: "DB error" });
+
+            // 3️⃣ Create membership (PENDING)
+            db.query(
+              `
+              INSERT INTO student_mess_membership
+              (user_id, mess_id, meal_slot, status)
+              VALUES (?, ?, ?, 'PENDING')
+              `,
+              [user.id, mess_id, meal_slot],
+              (err3) => {
+                if (err3) {
+                  return res.status(400).json({
+                    message: err3.sqlMessage || "Membership error",
+                  });
+                }
+
+                res.json({
+                  message: "Mess join request submitted",
+                  password_set: user.password_set,
+                  user_id: user.id,
+                });
+              }
+            );
+          }
+        );
+      };
+
+      // 🆕 New user
+      if (users.length === 0) {
+        db.query(
+          `
+          INSERT INTO users (name, phone, email, role)
+          VALUES (?, ?, ?, 'STUDENT')
+          `,
+          [name, phone, email || null],
+          (err4, result) => {
+            if (err4) return res.status(500).json({ message: "DB error" });
+
+            handleMembership({
+              id: result.insertId,
+              password_set: 0,
+            });
+          }
+        );
+      } else {
+        // ♻ Existing user
+        handleMembership(users[0]);
+      }
+    }
+  );
+};

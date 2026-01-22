@@ -77,20 +77,24 @@ const Navbar = () => {
             {showAccount && (
               <div className="account-dropdown">
                 <div className="account-role">
-                  {role === "ADMIN" ? "Admin Account" : "Student Account"}
+                  {role === "MESS_ADMIN" && "Mess Admin Account"}
+                  {role === "STUDENT" && "Student Account"}
+                  {role === "PLATFORM_ADMIN" && "Platform Admin"}
                 </div>
 
-                {role === "ADMIN" && (
+                {role === "MESS_ADMIN" && (
                   <>
                     <Link to="/admin/dashboard">Dashboard</Link>
-                    <Link to="/admin/pending">Pending Requests</Link>
+                    <Link to="/admin/pending">Pending Students</Link>
                     <Link to="/admin/active">Active Students</Link>
+                    <Link to="/admin/payments">Payments</Link>
                   </>
                 )}
 
                 {role === "STUDENT" && (
                   <Link to="/student/dashboard">My Dashboard</Link>
                 )}
+
 
                 <button className="logout-btn" onClick={handleLogout}>
                   Logout

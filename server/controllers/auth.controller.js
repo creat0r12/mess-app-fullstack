@@ -3,7 +3,7 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
 /* =========================
-   ADMIN LOGIN (FINAL)
+   MESS ADMIN LOGIN (FINAL - CALLBACK SAFE)
 ========================= */
 exports.loginAdmin = (req, res) => {
   const { identifier, password } = req.body;
@@ -13,50 +13,55 @@ exports.loginAdmin = (req, res) => {
   }
 
   const sql = `
-    SELECT * FROM admins
-    WHERE email = ? OR username = ?
+    SELECT 
+      u.id,
+      u.name,
+      u.phone,
+      u.email,
+      u.password,
+      u.role,
+      m.id AS mess_id
+    FROM users u
+    LEFT JOIN messes m ON m.owner_user_id = u.id
+    WHERE u.role = 'MESS_ADMIN'
+      AND (u.email = ? OR u.phone = ?)
     LIMIT 1
   `;
 
   db.query(sql, [identifier, identifier], async (err, results) => {
-    if (err) return res.status(500).json({ message: "DB error" });
+    if (err) {
+      console.error("MESS ADMIN LOGIN ERROR:", err);
+      return res.status(500).json({ message: "DB error" });
+    }
 
     if (!results || results.length === 0) {
       return res.status(401).json({ message: "Invalid credentials" });
     }
 
     const admin = results[0];
-    const isMatch = await bcrypt.compare(password, admin.password);
 
+    const isMatch = await bcrypt.compare(password, admin.password);
     if (!isMatch) {
       return res.status(401).json({ message: "Invalid credentials" });
     }
 
     const token = jwt.sign(
-      { id: admin.id, role: "ADMIN" },
+      {
+        id: admin.id,
+        role: admin.role,
+        mess_id: admin.mess_id,
+      },
       process.env.JWT_SECRET,
-      { expiresIn: "1d" }
+      { expiresIn: "7d" }
     );
 
     res.json({
       token,
-      role: "ADMIN",
-      admin: {
-        id: admin.id,
-        username: admin.username,
-        email: admin.email,
-      },
+      role: admin.role,
+      mess_id: admin.mess_id,
     });
   });
 };
-
-
-
-
-
-
-
-
 
 
 

@@ -1,4 +1,6 @@
 const db = require("../db");
+const jwt = require("jsonwebtoken");
+const bcrypt = require("bcryptjs");
 
 /* =========================
    PENDING STUDENTS
@@ -326,3 +328,234 @@ exports.updatePaymentSettings = (req, res) => {
 };
 
 
+
+
+/* =========================
+   CREATE MESS REQUEST
+   + CREATE MESS ADMIN USER
+========================= */
+exports.createMessRequest = async (req, res) => {
+  const { name, phone, email, address, description, password } = req.body;
+
+  if (!name || !phone || !address || !description || !password) {
+    return res.status(400).json({ message: "Missing required fields" });
+  }
+
+  try {
+    // 1️⃣ Check if admin already exists (by phone or email)
+    db.query(
+      `SELECT id FROM users WHERE phone = ? OR email = ?`,
+      [phone, email],
+      async (err, existing) => {
+        if (err) {
+          console.error("User check error:", err);
+          return res.status(500).json({ message: "DB error" });
+        }
+
+        if (existing.length > 0) {
+          return res
+            .status(400)
+            .json({ message: "Admin already exists with this phone/email" });
+        }
+
+        // 2️⃣ Hash password
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        // 3️⃣ Create MESS_ADMIN user
+        db.query(
+          `
+          INSERT INTO users
+            (name, phone, email, password, role)
+          VALUES
+            (?, ?, ?, ?, 'MESS_ADMIN')
+          `,
+          [name, phone, email || null, hashedPassword],
+          (err2, userResult) => {
+            if (err2) {
+              console.error("Create admin user error:", err2);
+              return res.status(500).json({ message: "Failed to create admin" });
+            }
+
+            const ownerUserId = userResult.insertId;
+
+            // 4️⃣ Create mess and link admin
+            db.query(
+              `
+              INSERT INTO messes
+                (name, phone, email, address, description, status, owner_user_id)
+              VALUES
+                (?, ?, ?, ?, ?, 'PENDING_VERIFICATION', ?)
+              `,
+              [name, phone, email || null, address, description, ownerUserId],
+              (err3, messResult) => {
+                if (err3) {
+                  console.error("Create mess error:", err3);
+                  return res
+                    .status(500)
+                    .json({ message: "Failed to create mess" });
+                }
+
+                res.json({
+                  message: "Mess request submitted successfully",
+                  mess_id: messResult.insertId,
+                  status: "PENDING_VERIFICATION",
+                });
+              }
+            );
+          }
+        );
+      }
+    );
+  } catch (err) {
+    console.error("Create mess request error:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+
+
+
+/* =========================
+   PLATFORM ADMIN LOGIN
+========================= */
+exports.platformAdminLogin = (req, res) => {
+  const { email, password } = req.body;
+
+  db.query(
+    "SELECT * FROM platform_admins WHERE email = ?",
+    [email],
+    (err, results) => {
+      if (err) {
+        console.error("Platform admin login DB error:", err);
+        return res.status(500).json({ message: "DB error" });
+      }
+
+      if (results.length === 0) {
+        return res.status(401).json({ message: "Invalid credentials" });
+      }
+
+      const admin = results[0];
+
+      if (admin.password !== password) {
+        return res.status(401).json({ message: "Invalid credentials" });
+      }
+
+      const token = jwt.sign(
+        {
+          platformAdminId: admin.id,
+          role: "PLATFORM_ADMIN",
+        },
+        process.env.JWT_SECRET,
+        { expiresIn: "1d" }
+      );
+
+      res.json({ token });
+    }
+  );
+};
+
+
+/* =========================
+   GET ALL MESS REQUESTS
+   (PLATFORM ADMIN ONLY)
+========================= */
+exports.getMessRequests = (req, res) => {
+  // 🔒 HARD SECURITY CHECK
+  if (!req.user || req.user.role !== "PLATFORM_ADMIN") {
+    return res.status(403).json({ message: "Access denied" });
+  }
+
+  db.query(
+    "SELECT * FROM messes ORDER BY created_at DESC",
+    (err, results) => {
+      if (err) return res.status(500).json({ message: "DB error" });
+      res.json(results);
+    }
+  );
+};
+
+/* =========================
+   APPROVE MESS REQUEST
+========================= */
+exports.approveMessRequest = (req, res) => {
+  const { id } = req.params;
+
+  db.query(
+    "SELECT * FROM messes WHERE id = ? AND status = 'PENDING_VERIFICATION'",
+    [id],
+    (err, messes) => {
+      if (err) return res.status(500).json({ message: "DB error" });
+      if (messes.length === 0)
+        return res.status(404).json({ message: "Mess not found" });
+
+      // ✅ Only activate mess
+      db.query(
+        `
+        UPDATE messes
+        SET status='ACTIVE'
+        WHERE id=?
+        `,
+        [id],
+        (err2) => {
+          if (err2)
+            return res.status(500).json({ message: "Mess activation failed" });
+
+          res.json({ message: "Mess approved successfully" });
+        }
+      );
+    }
+  );
+};
+
+
+
+
+/* =========================
+   REJECT MESS REQUEST
+========================= */
+exports.rejectMessRequest = (req, res) => {
+  const { id } = req.params;
+
+  db.query(
+    `
+    UPDATE messes
+    SET status = 'REJECTED'
+    WHERE id = ?
+    `,
+    [id],
+    (err, result) => {
+      if (err) {
+        console.error("Reject mess error:", err);
+        return res.status(500).json({ message: "DB error" });
+      }
+
+      if (result.affectedRows === 0) {
+        return res.status(404).json({ message: "Mess not found" });
+      }
+
+      res.json({ message: "Mess rejected successfully" });
+    }
+  );
+};
+
+/* =========================
+   GET ACTIVE MESSES (PUBLIC)
+========================= */
+exports.getActiveMesses = (req, res) => {
+  db.query(
+    `
+    SELECT id, name, phone, email, address, description
+    FROM messes
+    WHERE status = 'ACTIVE'
+    ORDER BY created_at DESC
+    `,
+    (err, results) => {
+      if (err) {
+        console.error("Get active messes error:", err);
+        return res.status(500).json({ message: "DB error" });
+      }
+
+      res.json(results);
+    }
+  );
+};

@@ -14,4 +14,8 @@ router.post("/set-password", controller.setStudentPassword);
 // 🔑 LOGIN
 router.post("/login", controller.loginStudent);
 
+
+// 🔹 Request to join a mess (PUBLIC)
+router.post("/request-mess", controller.requestMessJoin);
+
 module.exports = router;

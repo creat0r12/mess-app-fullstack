@@ -12,8 +12,9 @@ export const isAdminLoggedIn = () => {
   const token = localStorage.getItem("token");
   const role = localStorage.getItem("role");
 
-  return Boolean(token && role === "ADMIN");
+  return Boolean(token && role === "MESS_ADMIN");
 };
+
 
 export const logout = () => {
   localStorage.removeItem("token");

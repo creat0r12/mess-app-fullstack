@@ -1,47 +1,58 @@
 import { useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import "../../styles/authCard.css";
 
+const API = "http://localhost:5000";
+
 function StudentRequest() {
-  // 🔐 SET AUTH MODE AS STUDENT (VERY IMPORTANT)
+  // 🔐 SET AUTH MODE AS STUDENT
   useEffect(() => {
     localStorage.setItem("authMode", "STUDENT");
   }, []);
+
+  const location = useLocation();
 
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [gender, setGender] = useState("");
+  const [messId, setMessId] = useState<number | "">("");
+  const [mealSlot, setMealSlot] = useState(""); // ✅ LUNCH | DINNER | BOTH
+  const [messes, setMesses] = useState<any[]>([]);
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
 
+  // ✅ Load active messes
+  useEffect(() => {
+    fetch(`${API}/api/admin/public/active-messes`)
+      .then((res) => res.json())
+      .then((data) => setMesses(data))
+      .catch(() => setMessage("Failed to load mess list"));
+  }, []);
+
+  // ✅ Preselect mess if redirected
+  useEffect(() => {
+    if (location.state?.mess_id) {
+      setMessId(location.state.mess_id);
+    }
+  }, [location.state]);
+
   const submitRequest = async () => {
-    // 🔒 VALIDATIONS (STRICT BUT USER-FRIENDLY)
-    if (!name.trim()) {
-      setMessage("Name is required");
-      return;
-    }
-
-    if (!/^\d{10}$/.test(phone)) {
-      setMessage("Phone number must be exactly 10 digits");
-      return;
-    }
-
-    if (!gender) {
-      setMessage("Please select gender");
-      return;
-    }
-
-    if (!/^[a-zA-Z\s]+$/.test(name.trim())) {
-      setMessage("Name can contain only letters");
-      return;
-    }
-
+    // 🔒 VALIDATIONS
+    if (!name.trim()) return setMessage("Name is required");
+    if (!/^\d{10}$/.test(phone))
+      return setMessage("Phone number must be exactly 10 digits");
+    if (!gender) return setMessage("Please select gender");
+    if (!messId) return setMessage("Please select a mess");
+    if (!mealSlot) return setMessage("Please select meal slot");
+    if (!/^[a-zA-Z\s]+$/.test(name.trim()))
+      return setMessage("Name can contain only letters");
 
     setLoading(true);
     setMessage("");
 
     try {
-      const res = await fetch("http://localhost:5000/api/students/request", {
+      const res = await fetch(`${API}/api/students/request-mess`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -49,8 +60,10 @@ function StudentRequest() {
         body: JSON.stringify({
           name,
           phone,
-          gender,           // ✅ compulsory
-          email: email || null, // ✅ optional
+          gender,
+          email: email || null,
+          mess_id: messId,
+          meal_slot: mealSlot, // ✅ LUNCH | DINNER | BOTH
         }),
       });
 
@@ -66,6 +79,8 @@ function StudentRequest() {
       setPhone("");
       setEmail("");
       setGender("");
+      setMessId("");
+      setMealSlot("");
     } catch (err) {
       setMessage("❌ Server error. Please try again later.");
     } finally {
@@ -84,12 +99,10 @@ function StudentRequest() {
           value={name}
           onChange={(e) => {
             const value = e.target.value;
-            // allow only letters and spaces
             if (/^[a-zA-Z\s]*$/.test(value)) {
               setName(value);
             }
           }}
-
         />
 
         {/* Phone */}
@@ -108,6 +121,24 @@ function StudentRequest() {
           <option value="MALE">Male</option>
           <option value="FEMALE">Female</option>
           <option value="OTHER">Other</option>
+        </select>
+
+        {/* Mess Selection */}
+        <select value={messId} onChange={(e) => setMessId(Number(e.target.value))}>
+          <option value="">Select Mess</option>
+          {messes.map((m) => (
+            <option key={m.id} value={m.id}>
+              {m.name}
+            </option>
+          ))}
+        </select>
+
+        {/* Meal Slot Selection */}
+        <select value={mealSlot} onChange={(e) => setMealSlot(e.target.value)}>
+          <option value="">Select Meal Slot</option>
+          <option value="LUNCH">Lunch Only</option>
+          <option value="DINNER">Dinner Only</option>
+          <option value="BOTH">Lunch + Dinner</option>
         </select>
 
         {/* Email */}
@@ -129,12 +160,8 @@ function StudentRequest() {
             <a href="/student/login">Student Login</a>
           </p>
         </div>
-
-
       </div>
     </div>
-
-
   );
 }
 
