@@ -207,9 +207,7 @@ exports.getTotalCollection = (req, res) => {
   );
 };
 
-/* =========================
-   STUDENT PAYMENT HISTORY
-========================= */
+// ADMIN: any student's history
 exports.getStudentPaymentHistory = (req, res) => {
   const { studentId } = req.params;
 
@@ -238,6 +236,7 @@ exports.getStudentPaymentHistory = (req, res) => {
     }
   );
 };
+
 
 /* =========================
    PAYMENT SETTINGS (STUDENT SAFE)
@@ -349,3 +348,35 @@ exports.getStudentCurrentPayment = (req, res) => {
   );
 };
 
+/* =========================
+   STUDENT: OWN PAYMENT HISTORY
+========================= */
+exports.getMyPaymentHistory = (req, res) => {
+  const studentId = req.user.id;
+
+  db.query(
+    `
+    SELECT
+      payment_month,
+      payment_year,
+      amount,
+      paid_amount,
+      due_amount,
+      status,
+      payment_date,
+      proof_url
+    FROM payments
+    WHERE student_id = ?
+    ORDER BY payment_year DESC, payment_month DESC
+    `,
+    [studentId],
+    (err, rows) => {
+      if (err) {
+        console.error("MY PAYMENT HISTORY ERROR:", err);
+        return res.status(500).json({ message: "DB error" });
+      }
+
+      res.json(rows || []);
+    }
+  );
+};

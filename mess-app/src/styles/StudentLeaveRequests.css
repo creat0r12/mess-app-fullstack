@@ -1,0 +1,66 @@
+.student-leave-page {
+  padding: 20px;
+}
+
+.student-leave-page h2 {
+  margin-bottom: 15px;
+}
+
+.muted {
+  color: #777;
+}
+
+.leave-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #f9f9f9;
+  padding: 15px;
+  border-radius: 8px;
+  margin-bottom: 12px;
+  border-left: 5px solid #ffa500;
+}
+
+.leave-info h4 {
+  margin: 0 0 5px;
+}
+
+.leave-info p {
+  margin: 3px 0;
+  font-size: 14px;
+}
+
+.reason {
+  font-style: italic;
+}
+
+.leave-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.approve-btn {
+  background: #2ecc71;
+  border: none;
+  padding: 8px 12px;
+  color: white;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.reject-btn {
+  background: #e74c3c;
+  border: none;
+  padding: 8px 12px;
+  color: white;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.approve-btn:hover {
+  background: #27ae60;
+}
+
+.reject-btn:hover {
+  background: #c0392b;
+}

@@ -32,6 +32,15 @@ router.get("/recent", authMiddleware, controller.getRecentPayments);
 router.get("/total", authMiddleware, controller.getTotalCollection);
 
 /* =========================
+   STUDENT: PAYMENT HISTORY (✅ FIXED)
+========================= */
+router.get(
+  "/history",
+  authMiddleware,
+  controller.getMyPaymentHistory
+);
+
+/* =========================
    PAYMENT HISTORY (ADMIN)
 ========================= */
 router.get(

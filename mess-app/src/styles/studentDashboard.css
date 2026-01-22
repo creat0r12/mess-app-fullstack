@@ -145,6 +145,84 @@ input[type="file"] {
   padding: 8px;
 }
 
+
+/* =========================
+   LEAVE REQUEST CARD
+========================= */
+
+/* inputs inside leave card */
+.card select,
+.card textarea {
+  width: 100%;
+  margin-top: 6px;
+  margin-bottom: 10px;
+  padding: 8px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  font-size: 14px;
+}
+
+/* labels spacing */
+.card label {
+  display: block;
+  font-weight: 600;
+  margin-top: 10px;
+}
+
+/* leave status colors */
+.leave-status.pending {
+  color: orange;
+  font-weight: bold;
+}
+
+.leave-status.approved {
+  color: green;
+  font-weight: bold;
+}
+
+.leave-status.rejected {
+  color: red;
+  font-weight: bold;
+}
+
+/* rejected message */
+.error-msg {
+  color: red;
+  font-weight: bold;
+  margin-top: 6px;
+}
+
+/* disable button state */
+.pay-btn:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
+}
+
+
+.mess-slots {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.mess-slot {
+  border: 1px solid #e5e5e5;
+  padding: 12px;
+  border-radius: 8px;
+  background: #fafafa;
+}
+
+.mess-slot h4 {
+  margin-bottom: 8px;
+}
+
+@media (max-width: 768px) {
+  .mess-slots {
+    grid-template-columns: 1fr;
+  }
+}
+
+
 /* =========================
    MOBILE RESPONSIVE
 ========================= */

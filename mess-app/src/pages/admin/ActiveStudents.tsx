@@ -18,13 +18,14 @@ const ActiveStudents = () => {
   const fetchActive = async () => {
     try {
       const res = await fetch(
-        "http://localhost:5000/api/students/active",
+        "http://localhost:5000/api/admin/active",
         {
           headers: {
             Authorization: `Bearer ${getToken()}`,
           },
         }
       );
+
 
       if (!res.ok) {
         alert("Failed to load active students");

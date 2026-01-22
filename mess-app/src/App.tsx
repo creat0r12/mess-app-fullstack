@@ -18,7 +18,7 @@ import StudentProtectedRoute from "./components/common/StudentProtectedRoute";
 
 import StudentSetPassword from "./pages/student/StudentSetPassword";
 
-
+import StudentLeaveRequests from "./pages/admin/StudentLeaveRequests";
 
 /* ======================
    BASIC PAGES
@@ -80,10 +80,28 @@ function App() {
           }
         />
 
+        {/* ✅ NEW: STUDENT LEAVE REQUESTS */}
+        <Route
+          path="/admin/student-leaves"
+          element={
+            <ProtectedRoute>
+              <StudentLeaveRequests />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/admin/payments"
+          element={
+            <ProtectedRoute>
+              <Payments />
+            </ProtectedRoute>
+          }
+        />
 
         {/* ======================
-   STUDENT
-====================== */}
+           STUDENT
+        ====================== */}
 
         <Route path="/student/login" element={<StudentLogin />} />
 
@@ -97,21 +115,6 @@ function App() {
             </StudentProtectedRoute>
           }
         />
-
-
-
-        <Route
-          path="/admin/payments"
-          element={
-            <ProtectedRoute>
-              <Payments />
-            </ProtectedRoute>
-          }
-        />
-
-
-
-
       </Routes>
     </BrowserRouter>
   );
