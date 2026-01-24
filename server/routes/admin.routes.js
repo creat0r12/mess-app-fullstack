@@ -4,40 +4,48 @@ const auth = require("../middlewares/auth.middleware");
 const controller = require("../controllers/admin.controller");
 const upload = require("../middlewares/uploadPayment");
 
+/* =========================
+   STUDENTS (ADMIN)
+========================= */
+
 // ✅ Pending students
 router.get(
-  "/pending",
+  "/pending-students",
   auth,
   controller.getPendingStudents
 );
 
 // ✅ Approve student
 router.put(
-  "/approve/:id",
+  "/approve-student/:id",
   auth,
   controller.approveStudent
 );
 
 // ✅ Reject student
 router.put(
-  "/reject/:id",
+  "/reject-student/:id",
   auth,
   controller.rejectStudent
 );
 
 // ✅ Active students
 router.get(
-  "/active",
+  "/active-students",
   auth,
   controller.getActiveStudents
 );
 
 // ✅ Deactivate student
 router.put(
-  "/deactivate/:id",
+  "/deactivate-student/:id",
   auth,
   controller.deactivateStudent
 );
+
+/* =========================
+   DASHBOARD
+========================= */
 
 // ✅ Dashboard stats
 router.get(
@@ -45,6 +53,10 @@ router.get(
   auth,
   controller.getDashboardStats
 );
+
+/* =========================
+   PAYMENT SETTINGS
+========================= */
 
 // ✅ Payment settings (GET)
 router.get(
@@ -61,35 +73,50 @@ router.post(
   controller.updatePaymentSettings
 );
 
+/* =========================
+   MESS REQUESTS
+========================= */
+
 // ✅ Create Mess Request (PUBLIC)
 router.post(
   "/create-mess-request",
   controller.createMessRequest
 );
 
+// ✅ PUBLIC: Get active messes
+router.get(
+  "/public/active-messes",
+  controller.getActiveMesses
+);
 
-router.post("/platform-admin/login", controller.platformAdminLogin);
-router.get("/platform-admin/mess-requests", auth, controller.getMessRequests);
+/* =========================
+   PLATFORM ADMIN
+========================= */
 
-// ✅ Approve mess request (PLATFORM ADMIN)
+router.post(
+  "/platform-admin/login",
+  controller.platformAdminLogin
+);
+
+// ✅ Get all mess requests
+router.get(
+  "/platform-admin/mess-requests",
+  auth,
+  controller.getMessRequests
+);
+
+// ✅ Approve mess request
 router.put(
   "/platform-admin/mess-approve/:id",
   auth,
   controller.approveMessRequest
 );
 
-// ✅ Reject mess request (PLATFORM ADMIN)
+// ✅ Reject mess request
 router.put(
   "/platform-admin/mess-reject/:id",
   auth,
   controller.rejectMessRequest
-);
-
-
-// ✅ PUBLIC: Get active messes
-router.get(
-  "/public/active-messes",
-  controller.getActiveMesses
 );
 
 module.exports = router;

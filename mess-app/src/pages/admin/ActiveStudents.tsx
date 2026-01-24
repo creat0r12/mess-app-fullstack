@@ -11,14 +11,18 @@ type Student = {
   created_at?: string;
 };
 
+const API_ROOT = "http://localhost:5000";
+
 const ActiveStudents = () => {
   const [students, setStudents] = useState<Student[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchActive = async () => {
+    setLoading(true);
+
     try {
       const res = await fetch(
-        "http://localhost:5000/api/admin/active",
+        `${API_ROOT}/api/admin/active-students`, // ✅ FIXED ROUTE
         {
           headers: {
             Authorization: `Bearer ${getToken()}`,
@@ -26,16 +30,17 @@ const ActiveStudents = () => {
         }
       );
 
-
       if (!res.ok) {
-        alert("Failed to load active students");
+        console.error("Failed to load active students");
+        setStudents([]);
         return;
       }
 
       const data = await res.json();
-      setStudents(data);
+      setStudents(data || []);
     } catch (err) {
-      alert("Server error while fetching students");
+      console.error("Server error while fetching students", err);
+      setStudents([]);
     } finally {
       setLoading(false);
     }

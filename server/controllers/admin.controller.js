@@ -6,166 +6,165 @@ const bcrypt = require("bcryptjs");
    PENDING STUDENTS
 ========================= */
 exports.getPendingStudents = (req, res) => {
-  db.query(
-    `
-    SELECT id, name, email, phone, status, created_at
-    FROM students
-    WHERE status = 'PENDING'
-    `,
-    (err, results) => {
-      if (err) {
-        console.error("Pending students error:", err);
-        return res.status(500).json({ message: "DB error" });
-      }
-      res.json(results);
+  const messId = req.user.mess_id;
+
+  if (!messId) {
+    return res.status(403).json({ message: "Mess not linked to admin" });
+  }
+
+  const sql = `
+    SELECT
+      smm.id AS membership_id,
+      u.id AS user_id,
+      u.name,
+      u.phone,
+      u.email,
+      smm.meal_slot,
+      smm.status,
+      smm.created_at
+    FROM student_mess_membership smm
+    JOIN users u ON u.id = smm.user_id
+    WHERE smm.status = 'PENDING'
+      AND smm.mess_id = ?
+    ORDER BY smm.created_at DESC
+  `;
+
+  db.query(sql, [messId], (err, results) => {
+    if (err) {
+      console.error("Pending memberships error:", err);
+      return res.status(500).json({ message: "DB error" });
     }
-  );
+
+    res.json(results);
+  });
 };
+
 
 /* =========================
    APPROVE STUDENT
 ========================= */
 exports.approveStudent = (req, res) => {
-  const { id } = req.params;
+  const membershipId = req.params.id;
+  const messId = req.user.mess_id;
 
-  // 1️⃣ Get student (joining date + gender + status)
-  db.query(
-    "SELECT id, created_at, gender, status FROM students WHERE id = ?",
-    [id],
-    (err, students) => {
-      if (err) {
-        console.error("Get student error:", err);
-        return res.status(500).json({ message: "DB error" });
-      }
+  if (!messId) {
+    return res.status(403).json({ message: "Mess not linked to admin" });
+  }
 
-      if (students.length === 0) {
-        return res.status(404).json({ message: "Student not found" });
-      }
+  // 1️⃣ Get membership + user gender
+  const getSql = `
+    SELECT 
+      smm.id AS membership_id,
+      smm.user_id,
+      smm.mess_id,
+      u.gender
+    FROM student_mess_membership smm
+    JOIN users u ON u.id = smm.user_id
+    WHERE smm.id = ?
+      AND smm.mess_id = ?
+      AND smm.status = 'PENDING'
+  `;
 
-      const student = students[0];
-
-      // 🔒 Prevent duplicate approval
-      if (student.status === "ACTIVE") {
-        return res.status(400).json({
-          message: "Student is already approved",
-        });
-      }
-
-      // 2️⃣ Activate student
-      db.query(
-        "UPDATE students SET status='ACTIVE' WHERE id=?",
-        [id],
-        (err2) => {
-          if (err2) {
-            console.error("Approve error:", err2);
-            return res.status(500).json({ message: "DB error" });
-          }
-
-          // 3️⃣ Calculate cycle dates
-          const startDate = new Date(student.created_at);
-          const endDate = new Date(startDate);
-          endDate.setDate(endDate.getDate() + 30);
-
-          // 4️⃣ Create student cycle
-          db.query(
-            `
-            INSERT INTO student_cycles
-            (student_id, cycle_start_date, cycle_end_date)
-            VALUES (?, ?, ?)
-            `,
-            [
-              student.id,
-              startDate.toISOString().slice(0, 10),
-              endDate.toISOString().slice(0, 10),
-            ],
-            (err3, cycleResult) => {
-              if (err3) {
-                console.error("Cycle creation error:", err3);
-                return res
-                  .status(500)
-                  .json({ message: "Cycle creation failed" });
-              }
-
-              const cycleId = cycleResult.insertId;
-
-              // 5️⃣ Get amount from payment_settings
-              db.query(
-                `
-                SELECT boys_monthly_amount, girls_monthly_amount
-                FROM payment_settings
-                WHERE id = 1
-                `,
-                (err4, settings) => {
-                  if (err4) {
-                    console.error("Payment settings error:", err4);
-                    return res.status(500).json({ message: "DB error" });
-                  }
-
-                  const amount =
-                    student.gender === "FEMALE"
-                      ? settings[0].girls_monthly_amount
-                      : settings[0].boys_monthly_amount;
-
-                  const monthName = startDate.toLocaleString("default", {
-                    month: "long",
-                  });
-                  const year = startDate.getFullYear();
-
-                  // 6️⃣ Create payment (linked to student_cycles)
-                  db.query(
-                    `
-                    INSERT INTO payments
-                    (
-                      student_id,
-                      cycle_id,
-                      amount,
-                      due_amount,
-                      paid_amount,
-                      payment_month,
-                      payment_year,
-                      status
-                    )
-                    VALUES (?, ?, ?, ?, 0, ?, ?, 'DUE')
-                    `,
-                    [
-                      student.id,
-                      cycleId,
-                      amount,
-                      amount,
-                      monthName,
-                      year,
-                    ],
-                    (err5) => {
-                      if (err5) {
-                        console.error("Payment creation error:", err5);
-
-                        // 🛡️ Safety: close the cycle if payment fails
-                        db.query(
-                          "UPDATE student_cycles SET status='COMPLETED' WHERE id=?",
-                          [cycleId]
-                        );
-
-                        return res.status(500).json({
-                          message:
-                            "Student approved but payment creation failed",
-                        });
-                      }
-
-                      res.json({
-                        message:
-                          "Student approved, personal cycle & payment created",
-                      });
-                    }
-                  );
-                }
-              );
-            }
-          );
-        }
-      );
+  db.query(getSql, [membershipId, messId], (err, rows) => {
+    if (err) {
+      console.error("Membership fetch error:", err);
+      return res.status(500).json({ message: "DB error" });
     }
-  );
+
+    if (rows.length === 0) {
+      return res.status(404).json({
+        message: "Pending request not found for this mess",
+      });
+    }
+
+    const { user_id, gender } = rows[0];
+
+    // 2️⃣ Approve membership
+    db.query(
+      `
+      UPDATE student_mess_membership
+      SET status = 'ACTIVE'
+      WHERE id = ?
+      `,
+      [membershipId],
+      (err2) => {
+        if (err2) {
+          console.error("Approve membership error:", err2);
+          return res.status(500).json({ message: "DB error" });
+        }
+
+        // 3️⃣ Fetch payment settings
+        db.query(
+          `
+          SELECT boys_monthly_amount, girls_monthly_amount
+          FROM payment_settings
+          WHERE id = 1
+          `,
+          (err3, settings) => {
+            if (err3 || settings.length === 0) {
+              console.error("Payment settings error:", err3);
+              return res.status(500).json({ message: "Payment config error" });
+            }
+
+            // ✅ Gender-based pricing (business rule preserved)
+            const amount =
+              gender === "FEMALE"
+                ? settings[0].girls_monthly_amount
+                : settings[0].boys_monthly_amount;
+
+            // 4️⃣ Create first payment (MESS + MEMBERSHIP SCOPED)
+            const now = new Date();
+            const month = now.toLocaleString("default", { month: "long" });
+            const year = now.getFullYear();
+
+            db.query(
+              `
+              INSERT INTO payments
+              (
+                student_id,
+                mess_id,
+                membership_id,
+                amount,
+                paid_amount,
+                due_amount,
+                payment_month,
+                payment_year,
+                status
+              )
+              VALUES (?, ?, ?, ?, 0, ?, ?, ?, 'DUE')
+              `,
+              [
+                user_id,
+                messId,
+                membershipId,
+                amount,
+                amount,
+                month,
+                year,
+              ],
+              (err4) => {
+                if (err4) {
+                  console.error("Payment creation error:", err4);
+                  return res.status(500).json({
+                    message:
+                      "Membership approved but payment creation failed",
+                  });
+                }
+
+                res.json({
+                  message:
+                    "Student approved and payment cycle created for this mess",
+                });
+              }
+            );
+          }
+        );
+      }
+    );
+  });
 };
+
+
 
 
 
@@ -176,20 +175,33 @@ exports.approveStudent = (req, res) => {
    REJECT STUDENT
 ========================= */
 exports.rejectStudent = (req, res) => {
-  const { id } = req.params;
+  const { id } = req.params; // membership_id
+  const messId = req.user.mess_id;
 
-  db.query(
-    "UPDATE students SET status='REJECTED' WHERE id=?",
-    [id],
-    (err) => {
-      if (err) {
-        console.error("Reject student error:", err);
-        return res.status(500).json({ message: "DB error" });
-      }
-      res.json({ message: "Student rejected" });
+  const sql = `
+    UPDATE student_mess_membership
+    SET status = 'REJECTED'
+    WHERE id = ?
+      AND mess_id = ?
+      AND status = 'PENDING'
+  `;
+
+  db.query(sql, [id, messId], (err, result) => {
+    if (err) {
+      console.error("Reject membership error:", err);
+      return res.status(500).json({ message: "DB error" });
     }
-  );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({
+        message: "Request not found or already processed",
+      });
+    }
+
+    res.json({ message: "Student request rejected" });
+  });
 };
+
 
 /* =========================
    ACTIVE STUDENTS

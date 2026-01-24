@@ -1,5 +1,7 @@
 import { useState } from "react";
 import "../styles/paymentInfoModal.css";
+import type { PaymentHistory } from "../types/payment";
+
 
 const API = "http://localhost:5000";
 
@@ -23,15 +25,7 @@ type Payment = {
   proof_url?: string | null;
 };
 
-type PaymentHistory = {
-  id?: number;
-  payment_month: string;
-  payment_year: number;
-  amount: number;
-  status: "PAID";
-  payment_date: string | null;
-  proof_url?: string | null;
-};
+
 
 type Props = {
   payment: Payment;

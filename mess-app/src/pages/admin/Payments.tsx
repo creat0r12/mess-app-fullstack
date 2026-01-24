@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
 import PaymentInfoModal from "../../components/PaymentInfoModal";
+import { getToken } from "../../utils/auth";
 import "../../styles/Payments.css";
+
+import type { PaymentHistory } from "../../types/payment";
 
 const API = "http://localhost:5000";
 
@@ -24,16 +27,10 @@ type Payment = {
   status: "DUE" | "PENDING" | "PAID";
 };
 
-type PaymentHistory = {
-  payment_month: string;
-  payment_year: number;
-  amount: number;
-  status: string;
-  payment_date: string | null;
-};
+
 
 const Payments = () => {
-  const token = localStorage.getItem("token");
+  const token = getToken();
 
   const [payments, setPayments] = useState<Payment[]>([]);
   const [filter, setFilter] = useState<PaymentStatus>("ALL");
@@ -52,15 +49,24 @@ const Payments = () => {
   };
 
   /* ================= LOAD PAYMENTS ================= */
-  const fetchPayments = () => {
+  const fetchPayments = async () => {
     if (!token) return;
 
-    fetch(`${API}/api/payments`, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then((res) => res.json())
-      .then((data) => setPayments(Array.isArray(data) ? data : []))
-      .catch(() => setPayments([]));
+    try {
+      const res = await fetch(`${API}/api/payments`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (!res.ok) {
+        setPayments([]);
+        return;
+      }
+
+      const data = await res.json();
+      setPayments(Array.isArray(data) ? data : []);
+    } catch {
+      setPayments([]);
+    }
   };
 
   useEffect(() => {
@@ -81,14 +87,21 @@ const Payments = () => {
 
   /* ================= VIEW DETAILS ================= */
   const openDetails = async (p: Payment) => {
-    const res = await fetch(
-      `${API}/api/payments/history/${p.student_id}`,
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
+    if (!token) return;
 
-    const h = await res.json();
-    setHistory(Array.isArray(h) ? h : []);
-    setSelected(p);
+    try {
+      const res = await fetch(
+        `${API}/api/payments/history/${p.student_id}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      const h = await res.json();
+      setHistory(Array.isArray(h) ? h : []);
+      setSelected(p);
+    } catch {
+      setHistory([]);
+      setSelected(p);
+    }
   };
 
   return (
@@ -151,7 +164,9 @@ const Payments = () => {
             </div>
 
             <div className="payment-actions">
-              <button onClick={() => openDetails(p)}>View Details</button>
+              <button onClick={() => openDetails(p)}>
+                View Details
+              </button>
             </div>
           </div>
         );
@@ -159,12 +174,11 @@ const Payments = () => {
 
       {selected && (
         <PaymentInfoModal
-           payment={selected}
-            history={history}
-            onClose={() => setSelected(null)}
-            isAdmin={true}
-/>
-
+          payment={selected}
+          history={history}
+          onClose={() => setSelected(null)}
+          isAdmin={true}
+        />
       )}
     </div>
   );

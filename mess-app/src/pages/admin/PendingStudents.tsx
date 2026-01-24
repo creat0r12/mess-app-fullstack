@@ -2,43 +2,52 @@ import { useEffect, useState } from "react";
 import { getToken } from "../../utils/auth";
 import "../../styles/PendingStudents.css";
 
-type Student = {
-  id: number;
+/* =========================
+   TYPES
+========================= */
+type PendingMembership = {
+  membership_id: number;
+  user_id: number;
   name: string;
-  email: string;
-  phone: string;
-  room_number?: string;
+  email?: string;
+  phone?: string;
+  meal_slot?: string;
   created_at?: string;
 };
 
 const API_ROOT = "http://localhost:5000";
 
 const PendingStudents = () => {
-  const [students, setStudents] = useState<Student[]>([]);
+  const [students, setStudents] = useState<PendingMembership[]>([]);
   const [loading, setLoading] = useState(true);
 
   /* =========================
-     FETCH PENDING STUDENTS
+     FETCH PENDING REQUESTS
   ========================= */
   const fetchPending = async () => {
-    try {
-      setLoading(true);
+    setLoading(true);
 
-      const res = await fetch(`${API_ROOT}/api/admin/pending`, {
-        headers: {
-          Authorization: `Bearer ${getToken()}`,
-        },
-      });
+    try {
+      const res = await fetch(
+        `${API_ROOT}/api/admin/pending-students`,
+        {
+          headers: {
+            Authorization: `Bearer ${getToken()}`,
+          },
+        }
+      );
 
       if (!res.ok) {
-        throw new Error("Failed to load pending students");
+        console.error("Failed to load pending students");
+        setStudents([]);
+        return;
       }
 
       const data = await res.json();
-      setStudents(data || []);
+      setStudents(Array.isArray(data) ? data : []);
     } catch (err) {
-      console.error(err);
-      alert("Unable to fetch pending students");
+      console.error("Error fetching pending students", err);
+      setStudents([]);
     } finally {
       setLoading(false);
     }
@@ -55,7 +64,7 @@ const PendingStudents = () => {
      APPROVE / REJECT
   ========================= */
   const handleAction = async (
-    id: number,
+    membershipId: number,
     action: "approve" | "reject"
   ) => {
     const ok = window.confirm(
@@ -63,9 +72,14 @@ const PendingStudents = () => {
     );
     if (!ok) return;
 
+    const endpoint =
+      action === "approve"
+        ? "approve-student"
+        : "reject-student";
+
     try {
       const res = await fetch(
-        `${API_ROOT}/api/admin/${action}/${id}`,
+        `${API_ROOT}/api/admin/${endpoint}/${membershipId}`,
         {
           method: "PUT",
           headers: {
@@ -75,14 +89,14 @@ const PendingStudents = () => {
       );
 
       if (!res.ok) {
-        throw new Error("Action failed");
+        console.error("Action failed");
+        return;
       }
 
-      // Refresh list
+      // Refresh list after action
       fetchPending();
     } catch (err) {
-      console.error(err);
-      alert("Failed to perform action");
+      console.error("Failed to perform action", err);
     }
   };
 
@@ -98,15 +112,18 @@ const PendingStudents = () => {
 
       <div className="pending-grid">
         {students.map((s) => (
-          <div key={s.id} className="student-card pending">
+          <div
+            key={s.membership_id}
+            className="student-card pending"
+          >
             <div className="student-info">
               <h4>{s.name}</h4>
-              <p>{s.email}</p>
-              <p>{s.phone}</p>
+              <p>{s.email || "-"}</p>
+              <p>{s.phone || "-"}</p>
 
-              {s.room_number && (
+              {s.meal_slot && (
                 <p>
-                  <strong>Room:</strong> {s.room_number}
+                  <strong>Meal:</strong> {s.meal_slot}
                 </p>
               )}
 
@@ -121,14 +138,18 @@ const PendingStudents = () => {
             <div className="student-actions">
               <button
                 className="btn approve"
-                onClick={() => handleAction(s.id, "approve")}
+                onClick={() =>
+                  handleAction(s.membership_id, "approve")
+                }
               >
                 Approve
               </button>
 
               <button
                 className="btn reject"
-                onClick={() => handleAction(s.id, "reject")}
+                onClick={() =>
+                  handleAction(s.membership_id, "reject")
+                }
               >
                 Reject
               </button>
