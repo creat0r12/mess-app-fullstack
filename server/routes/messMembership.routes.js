@@ -1,10 +1,25 @@
 const express = require("express");
 const router = express.Router();
-const auth = require("../middlewares/auth.middleware");
+
+const { studentAuth } = require("../middlewares/auth.middleware");
 const controller = require("../controllers/messMembership.controller");
 
-// student routes
-router.post("/join", auth, controller.requestJoinMess);
-router.post("/leave", auth, controller.leaveMess);
+/* =========================
+   STUDENT MESS MEMBERSHIP
+========================= */
+
+// Student requests to join a mess
+router.post(
+  "/join",
+  studentAuth,
+  controller.requestJoinMess
+);
+
+// Student leaves a mess
+router.post(
+  "/leave",
+  studentAuth,
+  controller.leaveMess
+);
 
 module.exports = router;

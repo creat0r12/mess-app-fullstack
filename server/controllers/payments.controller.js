@@ -4,12 +4,11 @@ const db = require("../db");
    GET ALL PAYMENTS (ADMIN)
 ========================= */
 exports.getPayments = (req, res) => {
-  const { status, student_id } = req.query;
+  const { status } = req.query;
 
   let sql = `
     SELECT
       p.id,
-      p.student_id,
       p.amount,
       p.due_amount,
       p.paid_amount,
@@ -19,10 +18,11 @@ exports.getPayments = (req, res) => {
       p.proof_url,
       p.submitted_at,
       p.payment_date,
-      s.name AS student_name,
-      s.phone
+      u.name AS student_name,
+      u.phone
     FROM payments p
-    JOIN students s ON s.id = p.student_id
+    JOIN student_mess_membership m ON m.id = p.membership_id
+    JOIN users u ON u.id = m.user_id
     WHERE 1=1
   `;
 
@@ -33,11 +33,6 @@ exports.getPayments = (req, res) => {
     params.push(status);
   }
 
-  if (student_id) {
-    sql += " AND p.student_id = ?";
-    params.push(student_id);
-  }
-
   sql += " ORDER BY p.payment_year DESC, p.id DESC";
 
   db.query(sql, params, (err, rows) => {
@@ -45,7 +40,6 @@ exports.getPayments = (req, res) => {
       console.error("GET PAYMENTS ERROR:", err);
       return res.status(500).json({ message: "DB error" });
     }
-
     res.json(rows);
   });
 };
@@ -121,7 +115,7 @@ exports.getRecentPayments = (req, res) => {
     `
     SELECT
       p.id,
-      s.name AS student_name,
+      u.name AS student_name,
       p.amount,
       p.due_amount,
       p.payment_month,
@@ -129,7 +123,8 @@ exports.getRecentPayments = (req, res) => {
       p.status,
       p.submitted_at
     FROM payments p
-    JOIN students s ON p.student_id = s.id
+    JOIN student_mess_membership m ON m.id = p.membership_id
+    JOIN users u ON u.id = m.user_id
     ORDER BY p.id DESC
     LIMIT 10
     `,
@@ -207,36 +202,38 @@ exports.getTotalCollection = (req, res) => {
   );
 };
 
-// ADMIN: any student's history
-exports.getStudentPaymentHistory = (req, res) => {
-  const { studentId } = req.params;
+/* =========================
+   STUDENT: OWN PAYMENT HISTORY
+========================= */
+exports.getMyPaymentHistory = (req, res) => {
+  const userId = req.user.id;
 
   db.query(
     `
     SELECT
-      payment_month,
-      payment_year,
-      amount,
-      payment_date,
-      proof_url
-    FROM payments
-    WHERE student_id = ?
-      AND status = 'PAID'
-      AND payment_date IS NOT NULL
-    ORDER BY payment_year DESC, payment_date DESC
+      p.payment_month,
+      p.payment_year,
+      p.amount,
+      p.paid_amount,
+      p.due_amount,
+      p.status,
+      p.payment_date,
+      p.proof_url
+    FROM payments p
+    JOIN student_mess_membership m ON m.id = p.membership_id
+    WHERE m.user_id = ?
+    ORDER BY p.payment_year DESC, p.payment_month DESC
     `,
-    [studentId],
+    [userId],
     (err, rows) => {
       if (err) {
-        console.error("PAYMENT HISTORY ERROR:", err);
+        console.error("MY PAYMENT HISTORY ERROR:", err);
         return res.status(500).json({ message: "DB error" });
       }
-
       res.json(rows || []);
     }
   );
 };
-
 
 /* =========================
    PAYMENT SETTINGS (STUDENT SAFE)
@@ -251,7 +248,7 @@ exports.getPaymentSettings = (req, res) => {
       }
 
       const settings = rows[0];
-      if (settings.qr_image) {
+      if (settings?.qr_image) {
         settings.qr_image = `/uploads/payments/${settings.qr_image}`;
       }
 
@@ -261,118 +258,60 @@ exports.getPaymentSettings = (req, res) => {
 };
 
 /* =========================
-   STUDENT CURRENT PAYMENT (FIXED)
+   STUDENT CURRENT PAYMENT
 ========================= */
 exports.getStudentCurrentPayment = (req, res) => {
-  const studentId = req.user.id;
+  const userId = req.user.id;
 
-  // 1️⃣ Get latest payment + student gender
   db.query(
     `
     SELECT 
       p.*,
-      s.gender
+      m.gender
     FROM payments p
-    JOIN students s ON s.id = p.student_id
-    WHERE p.student_id = ?
+    JOIN student_mess_membership m ON m.id = p.membership_id
+    WHERE m.user_id = ?
     ORDER BY p.payment_year DESC, p.id DESC
     LIMIT 1
     `,
-    [studentId],
+    [userId],
     (err, rows) => {
       if (err) {
         console.error("STUDENT PAYMENT ERROR:", err);
         return res.status(500).json({ message: "DB error" });
       }
 
-      const currentPayment = rows[0];
-      if (!currentPayment) return res.json(null);
-
-      // 2️⃣ Get gender-based prices from payment_settings
-      db.query(
-        `
-        SELECT boys_monthly_amount, girls_monthly_amount
-        FROM payment_settings
-        WHERE id = 1
-        `,
-        (err2, settingsRows) => {
-          if (err2 || !settingsRows.length) {
-            console.error("PAYMENT SETTINGS ERROR:", err2);
-            return res.status(500).json({ message: "Payment settings missing" });
-          }
-
-          const settings = settingsRows[0];
-
-          // 3️⃣ Decide monthly amount based on gender
-          const monthlyAmount =
-            currentPayment.gender === "FEMALE"
-              ? settings.girls_monthly_amount
-              : settings.boys_monthly_amount;
-
-          // 4️⃣ Check for previous unpaid months
-          db.query(
-            `
-            SELECT COUNT(*) AS due_count
-            FROM payments
-            WHERE student_id = ?
-              AND (
-                payment_year < ?
-                OR (payment_year = ? AND payment_month != ?)
-              )
-              AND status != 'PAID'
-            `,
-            [
-              studentId,
-              currentPayment.payment_year,
-              currentPayment.payment_year,
-              currentPayment.payment_month,
-            ],
-            (err3, rows3) => {
-              if (err3) {
-                console.error("PREVIOUS DUE CHECK ERROR:", err3);
-                return res.status(500).json({ message: "DB error" });
-              }
-
-              res.json({
-                ...currentPayment,
-                amount: monthlyAmount, // ✅ gender-based amount
-                due_amount:
-                  monthlyAmount - (currentPayment.paid_amount || 0),
-                has_previous_due: rows3[0].due_count > 0, // ✅ last month due flag
-              });
-            }
-          );
-        }
-      );
+      res.json(rows[0] || null);
     }
   );
 };
 
 /* =========================
-   STUDENT: OWN PAYMENT HISTORY
+   ADMIN: STUDENT PAYMENT HISTORY
 ========================= */
-exports.getMyPaymentHistory = (req, res) => {
-  const studentId = req.user.id;
+exports.getStudentPaymentHistory = (req, res) => {
+  const { studentId } = req.params;
 
   db.query(
     `
     SELECT
-      payment_month,
-      payment_year,
-      amount,
-      paid_amount,
-      due_amount,
-      status,
-      payment_date,
-      proof_url
-    FROM payments
-    WHERE student_id = ?
-    ORDER BY payment_year DESC, payment_month DESC
+      p.payment_month,
+      p.payment_year,
+      p.amount,
+      p.paid_amount,
+      p.due_amount,
+      p.status,
+      p.payment_date,
+      p.proof_url
+    FROM payments p
+    JOIN student_mess_membership m ON m.id = p.membership_id
+    WHERE m.user_id = ?
+    ORDER BY p.payment_year DESC, p.payment_month DESC
     `,
     [studentId],
     (err, rows) => {
       if (err) {
-        console.error("MY PAYMENT HISTORY ERROR:", err);
+        console.error("ADMIN PAYMENT HISTORY ERROR:", err);
         return res.status(500).json({ message: "DB error" });
       }
 

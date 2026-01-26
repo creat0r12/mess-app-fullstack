@@ -22,6 +22,8 @@ import CreateMess from "./pages/CreateMess";
 import PlatformAdminLogin from "./pages/platform/PlatformAdminLogin";
 import PlatformMessRequests from "./pages/platform/PlatformMessRequests";
 
+import "./styles/basicPages.css";
+
 /* ======================
    BASIC PAGES
 ====================== */
@@ -34,41 +36,42 @@ const Home = () => (
 
 const Landing = () => {
   return (
-    <div style={{ padding: "40px", textAlign: "center" }}>
-      {/* TOP BAR */}
-      <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px" }}>
-        <Link to="/student/login">
-          <button>Login</button>
-        </Link>
+    <div className="page">
+      <div className="card">
 
-        {/* TEMP: Developer login */}
-        <Link to="/platform-admin/login">
-          <button style={{ opacity: 0.6 }}>Dev Login</button>
-        </Link>
-      </div>
+        <div className="top-actions">
+          <Link to="/student/login">
+            <button className="btn">Login</button>
+          </Link>
 
-      {/* MAIN CONTENT */}
-      <h1>Mess Portal</h1>
+          <Link to="/platform-admin/login">
+            <button className="btn btn-muted">Dev Login</button>
+          </Link>
+        </div>
 
-      <p style={{ maxWidth: "600px", margin: "20px auto" }}>
-        A secure platform to find and manage mess services.
-        Students can discover verified day and night messes,
-        while mess owners manage operations, payments, and notices easily.
-      </p>
+        <h1>Mess Portal</h1>
 
-      {/* ACTION BUTTONS */}
-      <div style={{ marginTop: "30px" }}>
-        <Link to="/find-mess">
-          <button style={{ marginRight: "15px" }}>Find Mess</button>
-        </Link>
+        <p>
+          A secure platform to find and manage mess services.
+          Students can discover verified day and night messes,
+          while mess owners manage operations, payments, and notices easily.
+        </p>
 
-        <Link to="/create-mess">
-          <button>Create Mess</button>
-        </Link>
+        <div className="action-buttons">
+          <Link to="/find-mess">
+            <button className="btn">Find Mess</button>
+          </Link>
+
+          <Link to="/create-mess">
+            <button className="btn btn-primary">Create Mess</button>
+          </Link>
+        </div>
+
       </div>
     </div>
   );
 };
+
 
 /* ======================
    APP

@@ -262,56 +262,82 @@ exports.loginStudent = (req, res) => {
 };
 
 
+// request mess join
 
 exports.requestMessJoin = (req, res) => {
-  const { name, phone, email, mess_id, meal_slot } = req.body;
+  const { name, phone, email, mess_id, meal_slot, gender } = req.body;
 
-  if (!name || !phone || !mess_id || !meal_slot) {
+  /* =========================
+     BASIC VALIDATIONS
+  ========================= */
+  if (!name || !phone || !mess_id || !meal_slot || !gender) {
     return res.status(400).json({ message: "Missing required fields" });
   }
 
-  // 1️⃣ Check if user exists
+  if (!/^\d{10}$/.test(phone)) {
+    return res.status(400).json({ message: "Invalid phone number" });
+  }
+
+  if (!["MALE", "FEMALE", "OTHER"].includes(gender)) {
+    return res.status(400).json({ message: "Invalid gender" });
+  }
+
+  if (!["LUNCH", "DINNER", "BOTH"].includes(meal_slot)) {
+    return res.status(400).json({ message: "Invalid meal slot" });
+  }
+
+  /* =========================
+     CHECK / CREATE USER
+  ========================= */
   db.query(
-    "SELECT * FROM users WHERE phone = ?",
+    "SELECT id FROM users WHERE phone = ?",
     [phone],
     (err, users) => {
-      if (err) return res.status(500).json({ message: "DB error" });
+      if (err) {
+        console.error("User lookup error:", err);
+        return res.status(500).json({ message: "DB error" });
+      }
 
-      const handleMembership = (user) => {
-        // 2️⃣ Save requested mess
+      const createMemberships = (userId) => {
+        /* =========================
+           HANDLE BOTH → LUNCH + DINNER
+        ========================= */
+        const slots =
+          meal_slot === "BOTH" ? ["LUNCH", "DINNER"] : [meal_slot];
+
+        const values = slots.map(slot => [
+          userId,
+          mess_id,
+          slot,
+          gender,
+          "PENDING",
+        ]);
+
         db.query(
-          "UPDATE users SET requested_mess_id = ?, role = 'STUDENT' WHERE id = ?",
-          [mess_id, user.id],
+          `
+          INSERT INTO student_mess_membership
+            (user_id, mess_id, meal_slot, gender, status)
+          VALUES ?
+          `,
+          [values],
           (err2) => {
-            if (err2) return res.status(500).json({ message: "DB error" });
+            if (err2) {
+              console.error("Membership error:", err2);
+              return res.status(400).json({
+                message: err2.sqlMessage || "Membership error",
+              });
+            }
 
-            // 3️⃣ Create membership (PENDING)
-            db.query(
-              `
-              INSERT INTO student_mess_membership
-              (user_id, mess_id, meal_slot, status)
-              VALUES (?, ?, ?, 'PENDING')
-              `,
-              [user.id, mess_id, meal_slot],
-              (err3) => {
-                if (err3) {
-                  return res.status(400).json({
-                    message: err3.sqlMessage || "Membership error",
-                  });
-                }
-
-                res.json({
-                  message: "Mess join request submitted",
-                  password_set: user.password_set,
-                  user_id: user.id,
-                });
-              }
-            );
+            res.json({
+              message: "Mess join request submitted successfully",
+            });
           }
         );
       };
 
-      // 🆕 New user
+      /* =========================
+         NEW USER
+      ========================= */
       if (users.length === 0) {
         db.query(
           `
@@ -319,19 +345,25 @@ exports.requestMessJoin = (req, res) => {
           VALUES (?, ?, ?, 'STUDENT')
           `,
           [name, phone, email || null],
-          (err4, result) => {
-            if (err4) return res.status(500).json({ message: "DB error" });
+          (err3, result) => {
+            if (err3) {
+              console.error("Create user error:", err3);
+              return res.status(500).json({ message: "DB error" });
+            }
 
-            handleMembership({
-              id: result.insertId,
-              password_set: 0,
-            });
+            createMemberships(result.insertId);
           }
         );
-      } else {
-        // ♻ Existing user
-        handleMembership(users[0]);
+      }
+      /* =========================
+         EXISTING USER
+      ========================= */
+      else {
+        createMemberships(users[0].id);
       }
     }
   );
 };
+
+
+

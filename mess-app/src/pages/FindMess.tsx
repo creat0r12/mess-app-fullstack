@@ -1,7 +1,7 @@
-// FindMess.tsx
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import "../styles/findMess.css";
 
 const API = "http://localhost:5000";
 
@@ -17,7 +17,6 @@ const FindMess = () => {
   }, []);
 
   const handleRequest = (mess: any) => {
-    // ✅ Redirect to Student Request (NOT login)
     navigate("/student/request", {
       state: {
         mess_id: mess.id,
@@ -27,22 +26,36 @@ const FindMess = () => {
   };
 
   return (
-    <div style={{ padding: 20 }}>
+    <div className="find-mess-page">
       <h2>Available Messes</h2>
 
-      {messes.map((m) => (
-        <div
-          key={m.id}
-          style={{ border: "1px solid #ccc", margin: 10, padding: 10 }}
-        >
-          <b>{m.name}</b>
-          <p>Phone: {m.phone}</p>
-          <p>Email: {m.email || "N/A"}</p>
-          <p>Address: {m.address}</p>
+      {messes.length === 0 && (
+        <div className="no-mess">
+          No active messes available right now.
+        </div>
+      )}
 
-          <button onClick={() => handleRequest(m)}>
-            Request to Join
-          </button>
+      {messes.map((m) => (
+        <div key={m.id} className="mess-card">
+          <div className="mess-name">{m.name}</div>
+
+          <div className="mess-info">
+            📞 Phone: {m.phone}
+          </div>
+
+          <div className="mess-info">
+            ✉️ Email: {m.email || "N/A"}
+          </div>
+
+          <div className="mess-info">
+            📍 Address: {m.address}
+          </div>
+
+          <div className="mess-action">
+            <button onClick={() => handleRequest(m)}>
+              Request to Join
+            </button>
+          </div>
         </div>
       ))}
     </div>

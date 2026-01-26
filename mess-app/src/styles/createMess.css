@@ -1,0 +1,114 @@
+/* =========================
+   CREATE MESS – MOBILE FIRST
+   BLUE THEME
+========================= */
+
+:root {
+  --blue: #2563eb;
+  --blue-dark: #1e40af;
+  --text-dark: #0f172a;
+  --text-muted: #475569;
+  --bg-light: #f8fafc;
+  --border: #e5e7eb;
+}
+
+/* Page wrapper */
+.create-mess-page {
+  min-height: calc(100vh - 70px);
+  padding: 16px;
+  background: var(--bg-light);
+  display: flex;
+  justify-content: center;
+}
+
+/* Card */
+.create-mess-card {
+  width: 100%;
+  max-width: 520px;
+  background: #ffffff;
+  border-radius: 14px;
+  padding: 20px;
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.1);
+}
+
+/* Heading */
+.create-mess-card h2 {
+  text-align: center;
+  margin-bottom: 20px;
+  color: var(--text-dark);
+  font-weight: 700;
+}
+
+/* Form */
+.create-mess-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* Labels */
+.create-mess-form label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-dark);
+}
+
+/* Inputs & textarea */
+.create-mess-form input,
+.create-mess-form textarea {
+  width: 100%;
+  padding: 12px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  font-size: 15px;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.create-mess-form textarea {
+  resize: vertical;
+  min-height: 90px;
+}
+
+/* Focus */
+.create-mess-form input:focus,
+.create-mess-form textarea:focus {
+  border-color: var(--blue);
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+}
+
+/* Submit button */
+.create-mess-form button {
+  margin-top: 10px;
+  padding: 14px;
+  border-radius: 12px;
+  border: none;
+  background: var(--blue);
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.create-mess-form button:hover {
+  background: var(--blue-dark);
+}
+
+.create-mess-form button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+/* Small helper text */
+.helper-text {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+/* Desktop improvement */
+@media (min-width: 768px) {
+  .create-mess-card {
+    padding: 30px;
+  }
+}

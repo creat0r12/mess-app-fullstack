@@ -1,5 +1,5 @@
 const express = require("express");
-const authMiddleware = require("../middlewares/auth.middleware");
+const { studentAuth } = require("../middlewares/auth.middleware");
 const {
   submitLeave,
   getMyLeave,
@@ -7,7 +7,10 @@ const {
 
 const router = express.Router();
 
-router.post("/leave", authMiddleware, submitLeave);
-router.get("/leave", authMiddleware, getMyLeave);
+// Student submits leave request
+router.post("/leave", studentAuth, submitLeave);
+
+// Student views own leave status
+router.get("/leave", studentAuth, getMyLeave);
 
 module.exports = router;

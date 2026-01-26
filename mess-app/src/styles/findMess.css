@@ -1,0 +1,98 @@
+/* =========================
+   FIND MESS – MOBILE FIRST
+   BLUE THEME
+========================= */
+
+:root {
+  --primary-blue: #2563eb;   /* main blue */
+  --primary-blue-dark: #1e40af;
+  --text-dark: #0f172a;
+  --text-muted: #475569;
+  --bg-light: #f8fafc;
+}
+
+/* Page wrapper */
+.find-mess-page {
+  min-height: calc(100vh - 70px);
+  padding: 16px;
+  background: var(--bg-light);
+}
+
+/* Page title */
+.find-mess-page h2 {
+  text-align: center;
+  margin-bottom: 20px;
+  color: var(--text-dark);
+  font-weight: 700;
+}
+
+/* Mess card */
+.mess-card {
+  background: #ffffff;
+  border-radius: 14px;
+  padding: 16px;
+  margin-bottom: 16px;
+  box-shadow: 0 10px 25px rgba(15, 23, 42, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Mess name */
+.mess-name {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--primary-blue);
+}
+
+/* Info rows */
+.mess-info {
+  font-size: 14px;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+/* CTA wrapper */
+.mess-action {
+  margin-top: 12px;
+}
+
+/* CTA button */
+.mess-action button {
+  width: 100%;
+  padding: 12px;
+  border-radius: 10px;
+  border: none;
+  background: var(--primary-blue);
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.mess-action button:hover {
+  background: var(--primary-blue-dark);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(37, 99, 235, 0.35);
+}
+
+/* Empty state */
+.no-mess {
+  text-align: center;
+  color: #64748b;
+  margin-top: 40px;
+  font-size: 15px;
+}
+
+/* Desktop improvement */
+@media (min-width: 768px) {
+  .find-mess-page {
+    padding: 30px;
+  }
+
+  .mess-card {
+    max-width: 600px;
+    margin: 0 auto 20px;
+  }
+}

@@ -4,23 +4,24 @@ const {
   getStudentLeaves,
   approveLeave,
   rejectLeave,
-  requestReturn, // ✅ ADD
+  requestReturn,
 } = require("../controllers/adminLeave.controller");
 
-const authMiddleware = require("../middlewares/auth.middleware");
+const { adminAuth } = require("../middlewares/auth.middleware");
 
 const router = express.Router();
 
 /* ================= LEAVE MANAGEMENT ================= */
 
-router.get("/student-leaves", authMiddleware, getStudentLeaves);
-router.put("/student-leaves/:id/approve", authMiddleware, approveLeave);
-router.put("/student-leaves/:id/reject", authMiddleware, rejectLeave);
+router.get("/student-leaves", adminAuth, getStudentLeaves);
 
-// ✅ NEW ROUTE
+router.put("/student-leaves/:id/approve", adminAuth, approveLeave);
+
+router.put("/student-leaves/:id/reject", adminAuth, rejectLeave);
+
 router.put(
   "/student-leaves/:id/request-return",
-  authMiddleware,
+  adminAuth,
   requestReturn
 );
 

@@ -1,51 +1,47 @@
 const express = require("express");
 const router = express.Router();
 const controller = require("../controllers/payments.controller");
-const authMiddleware = require("../middlewares/auth.middleware");
-const uploadPayment = require("../middlewares/uploadPayment");
+const { adminAuth, studentAuth } = require("../middlewares/auth.middleware");
+const upload = require("../middlewares/uploadPayment");
 
 /* =========================
    STUDENT: SUBMIT PAYMENT
 ========================= */
 router.post(
   "/submit/:paymentId",
-  authMiddleware,
-  uploadPayment.single("proof"),
+  studentAuth,
+  upload.single("proof"),
   controller.submitPayment
 );
 
 /* =========================
    GET PAYMENTS (ADMIN)
 ========================= */
-router.get("/", authMiddleware, controller.getPayments);
+router.get("/", adminAuth, controller.getPayments);
 
 /* =========================
    PAYMENT ACTIONS (ADMIN)
 ========================= */
-router.put("/accept/:paymentId", authMiddleware, controller.acceptPayment);
-router.put("/reject/:paymentId", authMiddleware, controller.rejectPayment);
+router.put("/accept/:paymentId", adminAuth, controller.acceptPayment);
+router.put("/reject/:paymentId", adminAuth, controller.rejectPayment);
 
 /* =========================
    DASHBOARD STATS (ADMIN)
 ========================= */
-router.get("/recent", authMiddleware, controller.getRecentPayments);
-router.get("/total", authMiddleware, controller.getTotalCollection);
+router.get("/recent", adminAuth, controller.getRecentPayments);
+router.get("/total", adminAuth, controller.getTotalCollection);
 
 /* =========================
-   STUDENT: PAYMENT HISTORY (✅ FIXED)
+   STUDENT: PAYMENT HISTORY
 ========================= */
-router.get(
-  "/history",
-  authMiddleware,
-  controller.getMyPaymentHistory
-);
+router.get("/history", studentAuth, controller.getMyPaymentHistory);
 
 /* =========================
    PAYMENT HISTORY (ADMIN)
 ========================= */
 router.get(
   "/history/:studentId",
-  authMiddleware,
+  adminAuth,
   controller.getStudentPaymentHistory
 );
 
@@ -54,7 +50,7 @@ router.get(
 ========================= */
 router.get(
   "/student",
-  authMiddleware,
+  studentAuth,
   controller.getStudentCurrentPayment
 );
 
@@ -63,6 +59,7 @@ router.get(
 ========================= */
 router.get(
   "/settings",
+  studentAuth,
   controller.getPaymentSettings
 );
 

@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const auth = require("../middlewares/auth.middleware");
+const { adminAuth } = require("../middlewares/auth.middleware");
 const controller = require("../controllers/admin.controller");
 const upload = require("../middlewares/uploadPayment");
 
@@ -8,67 +8,31 @@ const upload = require("../middlewares/uploadPayment");
    STUDENTS (ADMIN)
 ========================= */
 
-// ✅ Pending students
-router.get(
-  "/pending-students",
-  auth,
-  controller.getPendingStudents
-);
+router.get("/pending-students", adminAuth, controller.getPendingStudents);
 
-// ✅ Approve student
-router.put(
-  "/approve-student/:id",
-  auth,
-  controller.approveStudent
-);
+router.put("/approve-student/:id", adminAuth, controller.approveStudent);
 
-// ✅ Reject student
-router.put(
-  "/reject-student/:id",
-  auth,
-  controller.rejectStudent
-);
+router.put("/reject-student/:id", adminAuth, controller.rejectStudent);
 
-// ✅ Active students
-router.get(
-  "/active-students",
-  auth,
-  controller.getActiveStudents
-);
+router.get("/active-students", adminAuth, controller.getActiveStudents);
 
-// ✅ Deactivate student
-router.put(
-  "/deactivate-student/:id",
-  auth,
-  controller.deactivateStudent
-);
+router.put("/deactivate-student/:id", adminAuth, controller.deactivateStudent);
 
 /* =========================
    DASHBOARD
 ========================= */
 
-// ✅ Dashboard stats
-router.get(
-  "/dashboard-stats",
-  auth,
-  controller.getDashboardStats
-);
+router.get("/dashboard-stats", adminAuth, controller.getDashboardStats);
 
 /* =========================
    PAYMENT SETTINGS
 ========================= */
 
-// ✅ Payment settings (GET)
-router.get(
-  "/payment-settings",
-  auth,
-  controller.getPaymentSettings
-);
+router.get("/payment-settings", adminAuth, controller.getPaymentSettings);
 
-// ✅ Payment settings (UPDATE)
 router.post(
   "/payment-settings",
-  auth,
+  adminAuth,
   upload.single("qr"),
   controller.updatePaymentSettings
 );
@@ -77,45 +41,32 @@ router.post(
    MESS REQUESTS
 ========================= */
 
-// ✅ Create Mess Request (PUBLIC)
-router.post(
-  "/create-mess-request",
-  controller.createMessRequest
-);
+// PUBLIC
+router.post("/create-mess-request", controller.createMessRequest);
 
-// ✅ PUBLIC: Get active messes
-router.get(
-  "/public/active-messes",
-  controller.getActiveMesses
-);
+router.get("/public/active-messes", controller.getActiveMesses);
 
 /* =========================
    PLATFORM ADMIN
 ========================= */
 
-router.post(
-  "/platform-admin/login",
-  controller.platformAdminLogin
-);
+router.post("/platform-admin/login", controller.platformAdminLogin);
 
-// ✅ Get all mess requests
 router.get(
   "/platform-admin/mess-requests",
-  auth,
+  adminAuth,
   controller.getMessRequests
 );
 
-// ✅ Approve mess request
 router.put(
   "/platform-admin/mess-approve/:id",
-  auth,
+  adminAuth,
   controller.approveMessRequest
 );
 
-// ✅ Reject mess request
 router.put(
   "/platform-admin/mess-reject/:id",
-  auth,
+  adminAuth,
   controller.rejectMessRequest
 );
 

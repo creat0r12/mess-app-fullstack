@@ -53,17 +53,17 @@ exports.approveStudent = (req, res) => {
 
   // 1️⃣ Get membership + user gender
   const getSql = `
-    SELECT 
-      smm.id AS membership_id,
-      smm.user_id,
-      smm.mess_id,
-      u.gender
-    FROM student_mess_membership smm
-    JOIN users u ON u.id = smm.user_id
-    WHERE smm.id = ?
-      AND smm.mess_id = ?
-      AND smm.status = 'PENDING'
-  `;
+  SELECT 
+    smm.id AS membership_id,
+    smm.user_id,
+    smm.mess_id,
+    smm.gender
+  FROM student_mess_membership smm
+  WHERE smm.id = ?
+    AND smm.mess_id = ?
+    AND smm.status = 'PENDING'
+`;
+
 
   db.query(getSql, [membershipId, messId], (err, rows) => {
     if (err) {
@@ -119,22 +119,20 @@ exports.approveStudent = (req, res) => {
 
             db.query(
               `
-              INSERT INTO payments
-              (
-                student_id,
-                mess_id,
-                membership_id,
-                amount,
-                paid_amount,
-                due_amount,
-                payment_month,
-                payment_year,
-                status
-              )
-              VALUES (?, ?, ?, ?, 0, ?, ?, ?, 'DUE')
-              `,
+  INSERT INTO payments
+  (
+    mess_id,
+    membership_id,
+    amount,
+    paid_amount,
+    due_amount,
+    payment_month,
+    payment_year,
+    status
+  )
+  VALUES (?, ?, ?, 0, ?, ?, ?, 'DUE')
+  `,
               [
-                user_id,
                 messId,
                 membershipId,
                 amount,
@@ -146,17 +144,16 @@ exports.approveStudent = (req, res) => {
                 if (err4) {
                   console.error("Payment creation error:", err4);
                   return res.status(500).json({
-                    message:
-                      "Membership approved but payment creation failed",
+                    message: "Membership approved but payment creation failed",
                   });
                 }
 
                 res.json({
-                  message:
-                    "Student approved and payment cycle created for this mess",
+                  message: "Student approved and payment cycle created",
                 });
               }
             );
+
           }
         );
       }
