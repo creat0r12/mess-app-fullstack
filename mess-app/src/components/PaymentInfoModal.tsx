@@ -2,7 +2,6 @@ import { useState } from "react";
 import "../styles/paymentInfoModal.css";
 import type { PaymentHistory } from "../types/payment";
 
-
 const API = "http://localhost:5000";
 
 /* ================= TYPES ================= */
@@ -25,8 +24,6 @@ type Payment = {
   proof_url?: string | null;
 };
 
-
-
 type Props = {
   payment: Payment;
   history: PaymentHistory[];
@@ -46,9 +43,15 @@ const PaymentInfoModal = ({
   const [expandedKey, setExpandedKey] = useState<string>("current");
   const [previewImg, setPreviewImg] = useState<string | null>(null);
 
-  /* ================= FILTER HISTORY ================= */
+  /* ================= FILTER HISTORY (FIXED) ================= */
   const validHistory = history.filter(
-    (h) => h.status === "PAID" && h.proof_url
+    (h) =>
+      h.status === "PAID" &&
+      h.proof_url &&
+      !(
+        h.payment_month === payment.payment_month &&
+        h.payment_year === payment.payment_year
+      )
   );
 
   /* ================= STATUS LOGIC ================= */
@@ -71,21 +74,21 @@ const PaymentInfoModal = ({
   const selectedSummary =
     expandedKey === "current"
       ? {
-        total: payment.amount,
-        paid: payment.paid_amount || 0,
-        due: payment.due_amount,
-        status: uiStatus,
-      }
+          total: payment.amount,
+          paid: payment.paid_amount || 0,
+          due: payment.due_amount,
+          status: uiStatus,
+        }
       : (() => {
-        const index = Number(expandedKey.split("-")[1]);
-        const h = validHistory[index];
-        return {
-          total: h.amount,
-          paid: h.amount,
-          due: 0,
-          status: "PAID" as const,
-        };
-      })();
+          const index = Number(expandedKey.split("-")[1]);
+          const h = validHistory[index];
+          return {
+            total: h.amount,
+            paid: h.amount,
+            due: 0,
+            status: "PAID" as const,
+          };
+        })();
 
   /* ================= ACTIONS ================= */
   const handleAccept = async () => {
@@ -224,7 +227,6 @@ const PaymentInfoModal = ({
             </button>
           </div>
         )}
-
       </div>
 
       {/* IMAGE PREVIEW */}

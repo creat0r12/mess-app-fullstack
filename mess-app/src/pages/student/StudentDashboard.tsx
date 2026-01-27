@@ -27,11 +27,14 @@ const StudentDashboard = () => {
   const [leaveLoading, setLeaveLoading] = useState(false);
 
   // ✅ ONLY REQUIRED FIX (DO NOT REMOVE)
-  const hasLeaveRequest = leaveStatus !== null && leaveStatus !== undefined;
+  const hasLeaveRequest =
+  leaveStatus !== null &&
+  leaveStatus !== undefined &&
+  leaveStatus !== "RETURNED";
 
 
 
-  
+
   // ================= PAYMENT HISTORY =================
   useEffect(() => {
     if (!token) return;
@@ -64,20 +67,20 @@ const StudentDashboard = () => {
   }, []);
 
   /* ================= LOAD PAYMENT SETTINGS ================= */
-  useEffect(() => {
-    const loadPaymentSettings = async () => {
-      try {
-        const res = await fetch(`${API}/api/payments/settings`);
-        if (!res.ok) return;
-        const data = await res.json();
-        setPaymentSettings(data);
-      } catch {
-        setPaymentSettings(null);
-      }
-    };
+  // useEffect(() => {
+  //   const loadPaymentSettings = async () => {
+  //     try {
+  //       const res = await fetch(`${API}/api/payments/settings`);
+  //       if (!res.ok) return;
+  //       const data = await res.json();
+  //       setPaymentSettings(data);
+  //     } catch {
+  //       setPaymentSettings(null);
+  //     }
+  //   };
 
-    loadPaymentSettings();
-  }, []);
+  //   loadPaymentSettings();
+  // }, []);
 
   /* ================= LOAD CURRENT PAYMENT ================= */
   useEffect(() => {
@@ -106,7 +109,7 @@ const StudentDashboard = () => {
 
 
 
-/* ================= LOAD LEAVE STATUS ================= */
+ /* ================= LOAD LEAVE STATUS ================= */
 useEffect(() => {
   if (!token) return;
 
@@ -120,12 +123,42 @@ useEffect(() => {
       return res.json();
     })
     .then((data) => {
-      if (data && data.status) {
-        setLeaveStatus(data.status); // PENDING / APPROVED / REJECTED
+      if (!data) {
+        setLeaveStatus(null);
+        return;
       }
+
+      // 🔹 If student has RETURNED, apply 1-day cooldown
+      if (data.status === "RETURNED") {
+        if (!data.returned_at) {
+          setLeaveStatus("RETURNED");
+          return;
+        }
+
+        const returnedAt = new Date(data.returned_at);
+        const now = new Date();
+
+        const diffMs = now.getTime() - returnedAt.getTime();
+        const diffDays = diffMs / (1000 * 60 * 60 * 24);
+
+        // ✅ After 1 day → allow new leave
+        if (diffDays >= 1) {
+          setLeaveStatus(null); // show leave form again
+        } else {
+          setLeaveStatus("RETURNED"); // still in cooldown
+        }
+
+        return;
+      }
+
+      // 🔹 Normal flow
+      setLeaveStatus(data.status); // PENDING / APPROVED / REJECTED
     })
-    .catch(() => {});
+    .catch(() => {
+      setLeaveStatus(null);
+    });
 }, [token]);
+
 
 
   // ================= SUBMIT LEAVE =================
@@ -167,6 +200,10 @@ useEffect(() => {
       setLeaveLoading(false);
     }
   };
+
+
+  
+
 
   if (loading) return <p>Loading...</p>;
   if (!student) return <p>Please login again</p>;
@@ -234,7 +271,8 @@ useEffect(() => {
             <p><strong>Due:</strong> ₹{payment.due_amount}</p>
             <p><strong>Status:</strong> {payment.status}</p>
 
-            {payment.status === "DUE" && (
+            {/* ✅ SINGLE SOURCE OF TRUTH BUTTON */}
+            {payment.status !== "PENDING" && (
               <button
                 className="pay-btn"
                 onClick={() => setShowPaymentPopup(true)}
@@ -243,16 +281,19 @@ useEffect(() => {
               </button>
             )}
 
+            {/* ⏳ ADMIN ACTION PENDING */}
             {payment.status === "PENDING" && (
               <p className="pending-msg">Waiting for admin approval</p>
             )}
 
+            {/* ℹ️ INFO ONLY (NO LOGIC) */}
             {payment.status === "PAID" && (
               <p className="paid-msg">Payment completed ✅</p>
             )}
           </>
         )}
       </div>
+
 
       {/* MENU */}
       <div className="card">
@@ -265,82 +306,135 @@ useEffect(() => {
       </div>
 
       {/* ✅ LEAVE REQUEST CARD */}
-      <div className="card">
-        <h3>Leave Request</h3>
+<div className="card">
+  <h3>Leave Request</h3>
 
-        {hasLeaveRequest && (
-          <div className="status-box">
-            <p>
-              <strong>Status:</strong>{" "}
-              <span className={`leave-status ${leaveStatus!.toLowerCase()}`}>
-                {leaveStatus}
-              </span>
-            </p>
+  {hasLeaveRequest && (
+    <div className="status-box">
+      <p>
+        <strong>Status:</strong>{" "}
+        <span className={`leave-status ${leaveStatus?.toLowerCase() || ""}`}> 
+          {leaveStatus}
+        </span>
+      </p>
 
-            {leaveStatus === "PENDING" && (
-              <p className="muted">
-                Your leave request has been sent.<br />
-                Waiting for admin approval ⏳
-              </p>
-            )}
+      {/* ⏳ PENDING */}
+      {leaveStatus === "PENDING" && (
+        <p className="muted">
+          Your leave request has been sent.<br />
+          Waiting for admin approval ⏳
+        </p>
+      )}
 
-            {leaveStatus === "APPROVED" && (
-              <p className="paid-msg">
-                Leave approved by admin ✅<br />
-                Enjoy your leave.
-              </p>
-            )}
+      {/* ✅ APPROVED */}
+      {leaveStatus === "APPROVED" && (
+        <p className="paid-msg">
+          Leave approved by admin ✅<br />
+          Enjoy your leave.
+        </p>
+      )}
 
-            {leaveStatus === "REJECTED" && (
-              <p className="error-msg">
-                Leave rejected by admin ❌<br />
-                Please contact admin for details.
-              </p>
-            )}
-          </div>
-        )}
+      {/* 🔄 RETURN REQUESTED BY ADMIN */}
+      {leaveStatus === "RETURN_REQUESTED" && (
+        <>
+          <p className="muted">
+            Admin has requested you to confirm your return to the mess.
+          </p>
 
-        {!hasLeaveRequest && (
-          <>
-            <label>
-              Leave Date
-              <select
-                value={leaveDate}
-                onChange={(e) => setLeaveDate(e.target.value)}
-              >
-                <option value="">Select leave date</option>
-                <option value={new Date().toISOString().slice(0, 10)}>
-                  Today
-                </option>
-                <option
-                  value={new Date(Date.now() + 86400000)
-                    .toISOString()
-                    .slice(0, 10)}
-                >
-                  Tomorrow
-                </option>
-              </select>
-            </label>
+          <button
+            className="pay-btn"
+            onClick={async () => {
+              try {
+                const res = await fetch(
+                  `${API}/api/student/leave/confirm-return`,
+                  {
+                    method: "PUT",
+                    headers: {
+                      Authorization: `Bearer ${token}`,
+                    },
+                  }
+                );
 
-            <label>
-              Reason (optional)
-              <textarea
-                placeholder="Reason for leave"
-                value={leaveReason}
-                onChange={(e) => setLeaveReason(e.target.value)}
-              />
-            </label>
+                const data = await res.json();
 
-            <button
-              className="pay-btn"
-              onClick={submitLeaveRequest}
-              disabled={leaveLoading}
-            >
-              {leaveLoading ? "Submitting..." : "Submit Leave Request"}
-            </button>
-          </>
-        )}
-      </div>
+                if (!res.ok) {
+                  alert(data.message || "Failed to confirm return");
+                  return;
+                }
+
+                alert("Return confirmed successfully ✅");
+                setLeaveStatus("RETURNED"); // ⚠️ IMPORTANT
+              } catch {
+                alert("Server error");
+              }
+            }}
+          >
+            Confirm Return to Mess
+          </button>
+        </>
+      )}
+
+      {/* 🕒 COOLDOWN STATE */}
+      {leaveStatus === "RETURNED" && (
+        <p className="muted">
+          You have recently returned to the mess.<br />
+          You can apply for leave again after 24 hours ⏳
+        </p>
+      )}
+
+      {/* ❌ REJECTED */}
+      {leaveStatus === "REJECTED" && (
+        <p className="error-msg">
+          Leave rejected by admin ❌<br />
+          Please contact admin for details.
+        </p>
+      )}
+    </div>
+  )}
+
+  {/* 📝 LEAVE FORM (VISIBLE ONLY WHEN ALLOWED) */}
+  {!hasLeaveRequest && (
+    <>
+      <label>
+        Leave Date
+        <select
+          value={leaveDate}
+          onChange={(e) => setLeaveDate(e.target.value)}
+        >
+          <option value="">Select leave date</option>
+          <option value={new Date().toISOString().slice(0, 10)}>
+            Today
+          </option>
+          <option
+            value={new Date(Date.now() + 86400000)
+              .toISOString()
+              .slice(0, 10)}
+          >
+            Tomorrow
+          </option>
+        </select>
+      </label>
+
+      <label>
+        Reason (optional)
+        <textarea
+          placeholder="Reason for leave"
+          value={leaveReason}
+          onChange={(e) => setLeaveReason(e.target.value)}
+        />
+      </label>
+
+      <button
+        className="pay-btn"
+        onClick={submitLeaveRequest}
+        disabled={leaveLoading}
+      >
+        {leaveLoading ? "Submitting..." : "Submit Leave Request"}
+      </button>
+    </>
+  )}
+</div>
+
 
       {/* PAYMENT POPUP */}
       {showPaymentPopup && payment && (

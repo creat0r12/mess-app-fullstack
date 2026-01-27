@@ -100,43 +100,28 @@ exports.verifyStudent = (req, res) => {
   }
 
   db.query(
-    "SELECT id, status FROM students WHERE phone = ?",
+    "SELECT id, password, role FROM users WHERE phone = ? AND role = 'STUDENT'",
     [phone],
-    (err, results) => {
+    (err, users) => {
       if (err) {
         console.error("VERIFY ERROR:", err);
         return res.status(500).json({ message: "Server error" });
       }
 
-      if (results.length === 0) {
-        return res.status(404).json({ message: "Student not found" });
+      if (users.length === 0) {
+        return res.status(404).json({
+          message: "Account not found. Please contact mess admin.",
+        });
       }
 
-      const student = results[0];
-
-      if (student.status !== "ACTIVE") {
-        return res.status(403).json({ message: "Student not approved yet" });
-      }
-
-      // ✅ VERIFIED
-      db.query(
-        "SELECT password FROM students WHERE phone = ?",
-        [phone],
-        (err2, rows) => {
-          if (err2) return res.status(500).json({ message: "Server error" });
-
-          const passwordSet = !!rows[0].password;
-
-          res.json({
-            success: true,
-            passwordSet
-          });
-        }
-      );
-
+      res.json({
+        success: true,
+        passwordSet: !!users[0].password,
+      });
     }
   );
 };
+
 
 
 
@@ -162,26 +147,26 @@ exports.setStudentPassword = async (req, res) => {
   }
 
   db.query(
-    "SELECT id, password FROM students WHERE phone = ? AND status='ACTIVE'",
+    "SELECT id, password FROM users WHERE phone = ? AND role = 'STUDENT'",
     [phone],
-    async (err, results) => {
+    async (err, users) => {
       if (err) return res.status(500).json({ message: "Server error" });
 
-      if (results.length === 0) {
-        return res.status(404).json({ message: "Student not found" });
+      if (users.length === 0) {
+        return res.status(404).json({ message: "Account not found" });
       }
 
-      if (results[0].password) {
+      if (users[0].password) {
         return res.status(400).json({
-          message: "Password already set. Please login."
+          message: "Password already set. Please login.",
         });
       }
 
       const hashed = await bcrypt.hash(password, 10);
 
       db.query(
-        "UPDATE students SET password = ? WHERE phone = ?",
-        [hashed, phone],
+        "UPDATE users SET password = ? WHERE id = ?",
+        [hashed, users[0].id],
         (err2) => {
           if (err2) {
             console.error(err2);
@@ -196,6 +181,7 @@ exports.setStudentPassword = async (req, res) => {
 };
 
 
+
 /* =========================
    STUDENT LOGIN
 ========================= */
@@ -207,59 +193,51 @@ exports.loginStudent = (req, res) => {
   }
 
   db.query(
-    "SELECT id, name, phone, password, status FROM students WHERE phone = ?",
+    "SELECT id, name, phone, password FROM users WHERE phone = ? AND role = 'STUDENT'",
     [phone],
-    async (err, results) => {
+    async (err, users) => {
       if (err) {
         console.error("STUDENT LOGIN ERROR:", err);
         return res.status(500).json({ message: "Server error" });
       }
 
-      if (results.length === 0) {
-        return res.status(404).json({ message: "Student not found" });
+      if (users.length === 0) {
+        return res.status(404).json({ message: "Account not found" });
       }
 
-      const student = results[0];
-
-      if (student.status !== "ACTIVE") {
-        return res.status(403).json({ message: "Student not approved yet" });
-      }
-
-      if (!student.password) {
+      if (!users[0].password) {
         return res.status(403).json({
-          message: "Password not set. Please contact admin.",
+          message: "Password not set",
         });
       }
 
-      const isMatch = await bcrypt.compare(password, student.password);
+      const isMatch = await bcrypt.compare(password, users[0].password);
       if (!isMatch) {
         return res.status(401).json({ message: "Incorrect password" });
       }
 
-      // ✅ CREATE JWT TOKEN
       const token = jwt.sign(
         {
-          id: student.id,
+          id: users[0].id,
           role: "STUDENT",
         },
         process.env.JWT_SECRET,
         { expiresIn: "7d" }
       );
 
-      // ✅ SEND TOKEN + STUDENT
       res.json({
         success: true,
         token,
         student: {
-          id: student.id,
-          name: student.name,
-          phone: student.phone,
-          status: student.status,
+          id: users[0].id,
+          name: users[0].name,
+          phone: users[0].phone,
         },
       });
     }
   );
 };
+
 
 
 // request mess join

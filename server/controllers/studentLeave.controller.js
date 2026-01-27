@@ -4,7 +4,7 @@ const db = require("../db");
    SUBMIT STUDENT LEAVE
 ========================= */
 exports.submitLeave = (req, res) => {
-  const studentId = req.user.id;
+  const userId = req.user.id; // 🔥 JWT user id
   const { leave_date, reason } = req.body;
 
   // 1️⃣ Allow only today or tomorrow
@@ -22,13 +22,13 @@ exports.submitLeave = (req, res) => {
   // 2️⃣ Prevent multiple active leaves
   db.query(
     `
-    SELECT id 
+    SELECT id
     FROM student_leaves
-    WHERE student_id = ?
+    WHERE user_id = ?
       AND status IN ('PENDING', 'APPROVED')
     LIMIT 1
     `,
-    [studentId],
+    [userId],
     (err, existing) => {
       if (err) {
         console.error("Leave check error:", err);
@@ -45,10 +45,10 @@ exports.submitLeave = (req, res) => {
       db.query(
         `
         INSERT INTO student_leaves
-        (student_id, leave_date, reason, status)
+          (user_id, leave_date, reason, status)
         VALUES (?, ?, ?, 'PENDING')
         `,
-        [studentId, leave_date, reason || null],
+        [userId, leave_date, reason || null],
         (err2) => {
           if (err2) {
             console.error("Leave insert error:", err2);
@@ -70,17 +70,18 @@ exports.submitLeave = (req, res) => {
    GET OWN LEAVE STATUS
 ========================= */
 exports.getMyLeave = (req, res) => {
-  const studentId = req.user.id;
+  const userId = req.user.id;
 
   db.query(
     `
-    SELECT leave_date, status, reason
-    FROM student_leaves
-    WHERE student_id = ?
-    ORDER BY created_at DESC
-    LIMIT 1
+    SELECT leave_date, status, reason, returned_at
+FROM student_leaves
+WHERE user_id = ?
+ORDER BY created_at DESC
+LIMIT 1
+
     `,
-    [studentId],
+    [userId],
     (err, rows) => {
       if (err) {
         console.error("Get leave error:", err);
@@ -88,6 +89,40 @@ exports.getMyLeave = (req, res) => {
       }
 
       res.json(rows[0] || null);
+    }
+  );
+};
+
+
+/* =========================
+   CONFIRM RETURN (STUDENT)
+========================= */
+exports.confirmReturn = (req, res) => {
+  const userId = req.user.id;
+
+  db.query(
+    `
+    UPDATE student_leaves
+SET status = 'RETURNED',
+    verified_at = NOW(),
+    returned_at = NOW()
+WHERE user_id = ? AND status = 'RETURN_REQUESTED'
+
+    `,
+    [userId],
+    (err, result) => {
+      if (err) {
+        console.error("Confirm return error:", err);
+        return res.status(500).json({ message: "DB error" });
+      }
+
+      if (result.affectedRows === 0) {
+        return res.status(400).json({
+          message: "No return request to confirm",
+        });
+      }
+
+      res.json({ message: "Return confirmed" });
     }
   );
 };

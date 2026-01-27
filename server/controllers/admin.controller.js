@@ -79,6 +79,36 @@ exports.approveStudent = (req, res) => {
 
     const { user_id, gender } = rows[0];
 
+    // ✅ Ensure user exists (GLOBAL IDENTITY)
+db.query(
+  "SELECT id FROM users WHERE id = ?",
+  [user_id],
+  (errU, users) => {
+    if (errU) {
+      console.error("User check error:", errU);
+      return res.status(500).json({ message: "User check failed" });
+    }
+
+    // If user does not exist, create minimal user
+    if (users.length === 0) {
+      db.query(
+        `
+        INSERT INTO users (id, role)
+        VALUES (?, 'STUDENT')
+        `,
+        [user_id],
+        (errCreate) => {
+          if (errCreate) {
+            console.error("User creation error:", errCreate);
+            return res.status(500).json({ message: "User creation failed" });
+          }
+        }
+      );
+    }
+  }
+);
+
+
     // 2️⃣ Approve membership
     db.query(
       `
@@ -204,12 +234,28 @@ exports.rejectStudent = (req, res) => {
    ACTIVE STUDENTS
 ========================= */
 exports.getActiveStudents = (req, res) => {
+  const messId = req.user.mess_id;
+
+  if (!messId) {
+    return res.status(403).json({ message: "Mess not linked to admin" });
+  }
+
   db.query(
     `
-    SELECT id, name, email, phone, status, created_at
-    FROM students
-    WHERE status = 'ACTIVE'
+    SELECT DISTINCT
+      u.id AS user_id,
+      u.name,
+      u.phone,
+      u.email,
+      smm.meal_slot,
+      smm.created_at
+    FROM student_mess_membership smm
+    JOIN users u ON u.id = smm.user_id
+    WHERE smm.status = 'ACTIVE'
+      AND smm.mess_id = ?
+    ORDER BY smm.created_at DESC
     `,
+    [messId],
     (err, results) => {
       if (err) {
         console.error("Active students error:", err);
@@ -219,6 +265,7 @@ exports.getActiveStudents = (req, res) => {
     }
   );
 };
+
 
 /* =========================
    DEACTIVATE STUDENT

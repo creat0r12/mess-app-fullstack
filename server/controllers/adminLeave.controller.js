@@ -5,18 +5,20 @@ const getStudentLeaves = (req, res) => {
   const { status } = req.query;
 
   let sql = `
-    SELECT 
-      sl.id,
-      sl.leave_date,
-      sl.reason,
-      sl.status,
-      sl.created_at,
-      sl.verified_at,
-      s.id AS student_id,
-      s.name AS student_name
-    FROM student_leaves sl
-    JOIN students s ON sl.student_id = s.id
-  `;
+  SELECT 
+    sl.id,
+    sl.leave_date,
+    sl.reason,
+    sl.status,
+    sl.created_at,
+    sl.verified_at,
+    u.id AS user_id,
+    u.name AS student_name,
+    u.phone
+  FROM student_leaves sl
+  JOIN users u ON sl.user_id = u.id
+`;
+
 
   const params = [];
 
