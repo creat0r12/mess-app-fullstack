@@ -43,20 +43,17 @@ const PaymentInfoModal = ({
   const [expandedKey, setExpandedKey] = useState<string>("current");
   const [previewImg, setPreviewImg] = useState<string | null>(null);
 
-  /* ================= FILTER HISTORY (FIXED) ================= */
-  const validHistory = history.filter(
-    (h) =>
-      h.status === "PAID" &&
-      h.proof_url &&
-      !(
-        h.payment_month === payment.payment_month &&
-        h.payment_year === payment.payment_year
-      )
-  );
+  /* ================= NEW DERIVED DATA ================= */
+
+  // latest pending transaction (if any)
+  const pendingTxn = history.find((h) => h.status === "PENDING");
+
+  // approved / paid transactions only
+  const paidHistory = history.filter((h) => h.status === "PAID");
 
   /* ================= STATUS LOGIC ================= */
   const getUIStatus = (): "DUE" | "PENDING" | "ACTIVE" | "PAID" => {
-    if (payment.status === "PENDING") return "PENDING";
+    if (pendingTxn) return "PENDING";
 
     const paid = payment.paid_amount || 0;
     const total = payment.amount;
@@ -81,7 +78,7 @@ const PaymentInfoModal = ({
         }
       : (() => {
           const index = Number(expandedKey.split("-")[1]);
-          const h = validHistory[index];
+          const h = paidHistory[index];
           return {
             total: h.amount,
             paid: h.amount,
@@ -122,7 +119,9 @@ const PaymentInfoModal = ({
         {/* HEADER */}
         <div className="modal-header">
           <h3>Payment Details</h3>
-          <button className="close-btn" onClick={onClose}>✕</button>
+          <button className="close-btn" onClick={onClose}>
+            ✕
+          </button>
         </div>
 
         {/* STATUS */}
@@ -134,24 +133,37 @@ const PaymentInfoModal = ({
         <div className="row-cards">
           <div className="card">
             <h4>Student</h4>
-            <p><b>Name:</b> {payment.student_name}</p>
-            <p><b>Phone:</b> {payment.phone || "—"}</p>
-            <p><b>Gender:</b> {payment.gender || "—"}</p>
+            <p>
+              <b>Name:</b> {payment.student_name}
+            </p>
+            <p>
+              <b>Phone:</b> {payment.phone || "—"}
+            </p>
+            <p>
+              <b>Gender:</b> {payment.gender || "—"}
+            </p>
           </div>
 
           <div className="card">
             <h4>Payment Cycle</h4>
-            <p>{payment.payment_month} {payment.payment_year}</p>
+            <p>
+              {payment.payment_month} {payment.payment_year}
+            </p>
             <span className="current">Current</span>
           </div>
         </div>
 
         {/* SUMMARY */}
         <div className="summary-card">
-          <p><b>Total:</b> ₹{selectedSummary.total}</p>
-          <p><b>Paid:</b> ₹{selectedSummary.paid}</p>
+          <p>
+            <b>Total:</b> ₹{selectedSummary.total}
+          </p>
+          <p>
+            <b>Paid:</b> ₹{selectedSummary.paid}
+          </p>
           <p className="due">
-            <b>{selectedSummary.due === 0 ? "Due:" : "Remaining:"}</b> ₹{selectedSummary.due}
+            <b>{selectedSummary.due === 0 ? "Due:" : "Remaining:"}</b> ₹
+            {selectedSummary.due}
           </p>
         </div>
 
@@ -165,26 +177,41 @@ const PaymentInfoModal = ({
         >
           <div className="txn-main">
             <p className="txn-title">Current Month</p>
-            <p>₹{payment.paid_amount || 0}</p>
-            <p className="muted">{payment.submitted_at || "—"}</p>
-            <span className={`badge ${uiStatus.toLowerCase()}`}>{uiStatus}</span>
+
+            <p>
+              ₹{pendingTxn ? pendingTxn.amount : payment.paid_amount || 0}
+            </p>
+
+            <p className="muted">
+              {pendingTxn
+                ? "Waiting for admin approval"
+                : payment.submitted_at || "—"}
+            </p>
+
+            <span className={`badge ${uiStatus.toLowerCase()}`}>
+              {uiStatus}
+            </span>
+
             <p className="method">Method: Cash / QR-UPI</p>
           </div>
 
-          {expandedKey === "current" && payment.proof_url && (
-            <img
-              src={`${API}${payment.proof_url}`}
-              className="proof-thumb"
-              onClick={(e) => {
-                e.stopPropagation();
-                setPreviewImg(`${API}${payment.proof_url}`);
-              }}
-            />
-          )}
+          {expandedKey === "current" &&
+            (pendingTxn?.proof_url || payment.proof_url) && (
+              <img
+                src={`${API}${pendingTxn?.proof_url || payment.proof_url}`}
+                className="proof-thumb"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setPreviewImg(
+                    `${API}${pendingTxn?.proof_url || payment.proof_url}`
+                  );
+                }}
+              />
+            )}
         </div>
 
-        {/* HISTORY */}
-        {validHistory.map((h, i) => {
+        {/* HISTORY (PAID ONLY) */}
+        {paidHistory.map((h, i) => {
           const key = `h-${i}`;
           const expanded = expandedKey === key;
 
@@ -195,9 +222,11 @@ const PaymentInfoModal = ({
               onClick={() => setExpandedKey(key)}
             >
               <div className="txn-main">
-                <p className="txn-title">{h.payment_month} {h.payment_year}</p>
+                <p className="txn-title">
+                  {h.payment_month} {h.payment_year}
+                </p>
                 <p>₹{h.amount}</p>
-                <p className="muted">{h.payment_date}</p>
+                <p className="muted">{h.payment_date || "—"}</p>
                 <span className="badge paid">PAID</span>
                 <p className="method">Method: Cash / QR-UPI</p>
               </div>
@@ -217,7 +246,7 @@ const PaymentInfoModal = ({
         })}
 
         {/* ADMIN ACTIONS */}
-        {isAdmin && payment.status === "PENDING" && (
+        {isAdmin && pendingTxn && (
           <div className="modal-actions">
             <button className="accept-btn" onClick={handleAccept}>
               Accept

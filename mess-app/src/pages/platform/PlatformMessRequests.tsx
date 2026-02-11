@@ -6,7 +6,8 @@ const API = "http://localhost:5000";
 const PlatformMessRequests = () => {
   const [messes, setMesses] = useState<any[]>([]);
 
-  const token = localStorage.getItem("platform_admin_token");
+  const token = localStorage.getItem("token");
+
 
   const fetchMesses = async () => {
     try {

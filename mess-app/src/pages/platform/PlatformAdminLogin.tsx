@@ -15,20 +15,21 @@ const PlatformAdminLogin = () => {
         console.log("Trying platform admin login:", { email, password });
 
         try {
-            const res = await axios.post(
-                `${API}/api/admin/platform-admin/login`,
-                { email, password }
-            );
+    const res = await axios.post(
+        `${API}/api/admin/platform-admin/login`,
+        { email, password }
+    );
+
+    localStorage.setItem("token", res.data.token);
+    localStorage.setItem("role", "PLATFORM_ADMIN");
+
+    navigate("/platform-admin/mess-requests", { replace: true });
+
+} catch (err: any) {
+    alert(err?.response?.data?.message || "Login failed");
+}
 
 
-            console.log("Login success:", res.data);
-
-            localStorage.setItem("platform_admin_token", res.data.token);
-            navigate("/platform-admin/mess-requests");
-        } catch (err: any) {
-            console.error("Login error:", err?.response?.data || err);
-            alert(err?.response?.data?.message || "Login failed");
-        }
     };
 
     return (

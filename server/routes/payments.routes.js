@@ -17,13 +17,22 @@ router.post(
 /* =========================
    GET PAYMENTS (ADMIN)
 ========================= */
-router.get("/", adminAuth, controller.getPayments);
+router.get("/", adminAuth, controller.getPendingTransactions);
 
 /* =========================
    PAYMENT ACTIONS (ADMIN)
 ========================= */
-router.put("/accept/:paymentId", adminAuth, controller.acceptPayment);
-router.put("/reject/:paymentId", adminAuth, controller.rejectPayment);
+router.put(
+  "/transactions/accept/:transactionId",
+  adminAuth,
+  controller.acceptTransaction
+);
+
+router.put(
+  "/transactions/reject/:transactionId",
+  adminAuth,
+  controller.rejectTransaction
+);
 
 /* =========================
    DASHBOARD STATS (ADMIN)
@@ -62,5 +71,20 @@ router.get(
   studentAuth,
   controller.getPaymentSettings
 );
+
+router.put(
+  "/cancel",
+  studentAuth,
+  controller.cancelPendingPayment
+);
+
+router.get(
+  "/transactions/pending",
+  adminAuth,
+  controller.getPendingTransactions
+);
+
+
+router.get("/all", adminAuth, controller.getAllPayments);
 
 module.exports = router;

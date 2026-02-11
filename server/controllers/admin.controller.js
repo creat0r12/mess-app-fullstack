@@ -477,30 +477,41 @@ exports.createMessRequest = async (req, res) => {
 exports.platformAdminLogin = (req, res) => {
   const { email, password } = req.body;
 
+  console.log("LOGIN TRY:", email, password);
+
   db.query(
-    "SELECT * FROM platform_admins WHERE email = ?",
+    `
+    SELECT * FROM users
+    WHERE email = ?
+      AND role = 'PLATFORM_ADMIN'
+      AND status = 'ACTIVE'
+    `,
     [email],
-    (err, results) => {
+    async (err, results) => {
+      console.log("DB RESULTS:", results);
+
       if (err) {
-        console.error("Platform admin login DB error:", err);
+        console.error("DB error:", err);
         return res.status(500).json({ message: "DB error" });
       }
 
       if (results.length === 0) {
+        console.log("❌ NO USER FOUND");
         return res.status(401).json({ message: "Invalid credentials" });
       }
 
       const admin = results[0];
 
-      if (admin.password !== password) {
+      const isMatch = await bcrypt.compare(password, admin.password);
+      console.log("PASSWORD MATCH:", isMatch);
+
+      if (!isMatch) {
+        console.log("❌ PASSWORD MISMATCH");
         return res.status(401).json({ message: "Invalid credentials" });
       }
 
       const token = jwt.sign(
-        {
-          platformAdminId: admin.id,
-          role: "PLATFORM_ADMIN",
-        },
+        { userId: admin.id, role: "PLATFORM_ADMIN" },
         process.env.JWT_SECRET,
         { expiresIn: "1d" }
       );
@@ -509,6 +520,8 @@ exports.platformAdminLogin = (req, res) => {
     }
   );
 };
+
+
 
 
 /* =========================

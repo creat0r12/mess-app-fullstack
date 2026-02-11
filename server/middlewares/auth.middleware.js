@@ -1,4 +1,5 @@
 const jwt = require("jsonwebtoken");
+const db = require("../db");
 
 /* =========================
    BASE AUTH (JWT VERIFY)
@@ -26,25 +27,52 @@ const authenticate = (req, res, next) => {
 ========================= */
 const adminAuth = (req, res, next) => {
   authenticate(req, res, () => {
-    if (
-      req.user.role !== "ADMIN" &&
-      req.user.role !== "MESS_ADMIN"
-    ) {
+    if (!["PLATFORM_ADMIN", "MESS_ADMIN"].includes(req.user.role)) {
       return res.status(403).json({ message: "Admin access only" });
     }
     next();
   });
 };
 
+
+
 /* =========================
-   STUDENT AUTH
+   STUDENT AUTH (WITH MEMBERSHIP)
 ========================= */
 const studentAuth = (req, res, next) => {
   authenticate(req, res, () => {
     if (req.user.role !== "STUDENT") {
       return res.status(403).json({ message: "Student access only" });
     }
-    next();
+
+    // 🔹 Fetch active membership for this student
+    db.query(
+      `
+      SELECT id
+      FROM student_mess_membership
+      WHERE user_id = ?
+        AND status = 'ACTIVE'
+      LIMIT 1
+      `,
+      [req.user.id],
+      (err, rows) => {
+        if (err) {
+          console.error("STUDENT AUTH ERROR:", err);
+          return res.status(500).json({ message: "DB error" });
+        }
+
+        if (!rows.length) {
+          return res
+            .status(403)
+            .json({ message: "No active mess membership found" });
+        }
+
+        // ✅ Attach membership_id to req.user
+        req.user.membership_id = rows[0].id;
+
+        next();
+      }
+    );
   });
 };
 
