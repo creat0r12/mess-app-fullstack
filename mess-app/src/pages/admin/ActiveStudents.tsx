@@ -8,7 +8,7 @@ type Student = {
   email?: string;
   phone?: string;
   room_number?: string;
-  created_at?: string;
+  joined_at?: string;
 };
 
 const API_ROOT = "http://localhost:5000";
@@ -37,6 +37,7 @@ const ActiveStudents = () => {
       }
 
       const data = await res.json();
+      console.log("ACTIVE STUDENTS:", data);
       setStudents(data || []);
     } catch (err) {
       console.error("Server error while fetching students", err);
@@ -67,7 +68,7 @@ const ActiveStudents = () => {
               <th>Name</th>
               <th>Phone</th>
               <th>Email</th>
-              <th>Room</th>
+              <th>ID</th>
               <th>Joined</th>
             </tr>
           </thead>
@@ -77,10 +78,10 @@ const ActiveStudents = () => {
                 <td>{s.name}</td>
                 <td>{s.phone || "-"}</td>
                 <td>{s.email || "-"}</td>
-                <td>{s.room_number || "-"}</td>
+                <td>{s.id}</td>
                 <td>
-                  {s.created_at
-                    ? new Date(s.created_at).toLocaleDateString()
+                  {s.joined_at
+                    ? new Date(s.joined_at).toLocaleDateString()
                     : "-"}
                 </td>
               </tr>

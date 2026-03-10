@@ -7,22 +7,18 @@ const API = "http://localhost:5000";
 /* ================= TYPES ================= */
 
 type Payment = {
-  id: number;
+  transaction_id: number;
+  membership_id: number;
+
   student_name: string;
   phone?: string;
   gender?: string;
 
   amount: number;
-  paid_amount?: number;
-  due_amount: number;
-
-  payment_month: string;
-  payment_year: number;
-
-  status?: "DUE" | "PENDING" | "PAID" | null;
   submitted_at?: string | null;
   proof_url?: string | null;
 };
+
 
 type Props = {
   payment: Payment;
@@ -49,14 +45,18 @@ const PaymentInfoModal = ({
   const pendingTxn = history.find((h) => h.status === "PENDING");
 
   // approved / paid transactions only
-  const paidHistory = history.filter((h) => h.status === "PAID");
+  const paidHistory = history.filter((h) => h.status === "APPLIED");
+
 
   /* ================= STATUS LOGIC ================= */
   const getUIStatus = (): "DUE" | "PENDING" | "ACTIVE" | "PAID" => {
     if (pendingTxn) return "PENDING";
 
-    const paid = payment.paid_amount || 0;
     const total = payment.amount;
+
+    const paid = history
+      .filter((h) => h.status === "APPLIED")
+      .reduce((sum, h) => sum + h.amount, 0);
 
     if (paid === 0) return "DUE";
     if (paid > 0 && paid < total) return "ACTIVE";
@@ -65,37 +65,48 @@ const PaymentInfoModal = ({
     return "DUE";
   };
 
+
   const uiStatus = getUIStatus();
 
   /* ================= SUMMARY ================= */
+  const total = payment.amount;
+
+  const paid = history
+    .filter((h) => h.status === "APPLIED")
+    .reduce((sum, h) => sum + h.amount, 0);
+
+  const remaining = Math.max(total - paid, 0);
+
   const selectedSummary =
     expandedKey === "current"
       ? {
-          total: payment.amount,
-          paid: payment.paid_amount || 0,
-          due: payment.due_amount,
-          status: uiStatus,
-        }
+        total,
+        paid,
+        due: remaining,
+        status: uiStatus,
+      }
+
       : (() => {
-          const index = Number(expandedKey.split("-")[1]);
-          const h = paidHistory[index];
-          return {
-            total: h.amount,
-            paid: h.amount,
-            due: 0,
-            status: "PAID" as const,
-          };
-        })();
+        const index = Number(expandedKey.split("-")[1]);
+        const h = paidHistory[index];
+        return {
+          total: h.amount,
+          paid: h.amount,
+          due: 0,
+          status: "PAID" as const,
+        };
+      })();
 
   /* ================= ACTIONS ================= */
   const handleAccept = async () => {
     if (!token) return alert("Unauthorized");
     if (!window.confirm("Accept this payment?")) return;
 
-    await fetch(`${API}/api/payments/accept/${payment.id}`, {
-      method: "PUT",
-      headers: { Authorization: `Bearer ${token}` },
-    });
+    await fetch(`${API}/api/payments/accept/${payment.transaction_id}`,
+      {
+        method: "PUT",
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
     onClose();
   };
@@ -104,10 +115,11 @@ const PaymentInfoModal = ({
     if (!token) return alert("Unauthorized");
     if (!window.confirm("Reject this payment?")) return;
 
-    await fetch(`${API}/api/payments/reject/${payment.id}`, {
+    await fetch(`${API}/api/payments/reject/${payment.transaction_id}`, {
       method: "PUT",
       headers: { Authorization: `Bearer ${token}` },
     });
+
 
     onClose();
   };
@@ -146,9 +158,8 @@ const PaymentInfoModal = ({
 
           <div className="card">
             <h4>Payment Cycle</h4>
-            <p>
-              {payment.payment_month} {payment.payment_year}
-            </p>
+            <p>Current Payment Cycle</p>
+
             <span className="current">Current</span>
           </div>
         </div>
@@ -179,7 +190,8 @@ const PaymentInfoModal = ({
             <p className="txn-title">Current Month</p>
 
             <p>
-              ₹{pendingTxn ? pendingTxn.amount : payment.paid_amount || 0}
+              ₹{pendingTxn ? pendingTxn.amount : remaining}
+
             </p>
 
             <p className="muted">
@@ -222,9 +234,7 @@ const PaymentInfoModal = ({
               onClick={() => setExpandedKey(key)}
             >
               <div className="txn-main">
-                <p className="txn-title">
-                  {h.payment_month} {h.payment_year}
-                </p>
+                <p className="txn-title">Previous Payment</p>
                 <p>₹{h.amount}</p>
                 <p className="muted">{h.payment_date || "—"}</p>
                 <span className="badge paid">PAID</span>

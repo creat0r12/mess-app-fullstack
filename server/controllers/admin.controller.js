@@ -80,33 +80,33 @@ exports.approveStudent = (req, res) => {
     const { user_id, gender } = rows[0];
 
     // ✅ Ensure user exists (GLOBAL IDENTITY)
-db.query(
-  "SELECT id FROM users WHERE id = ?",
-  [user_id],
-  (errU, users) => {
-    if (errU) {
-      console.error("User check error:", errU);
-      return res.status(500).json({ message: "User check failed" });
-    }
+    db.query(
+      "SELECT id FROM users WHERE id = ?",
+      [user_id],
+      (errU, users) => {
+        if (errU) {
+          console.error("User check error:", errU);
+          return res.status(500).json({ message: "User check failed" });
+        }
 
-    // If user does not exist, create minimal user
-    if (users.length === 0) {
-      db.query(
-        `
+        // If user does not exist, create minimal user
+        if (users.length === 0) {
+          db.query(
+            `
         INSERT INTO users (id, role)
         VALUES (?, 'STUDENT')
         `,
-        [user_id],
-        (errCreate) => {
-          if (errCreate) {
-            console.error("User creation error:", errCreate);
-            return res.status(500).json({ message: "User creation failed" });
-          }
+            [user_id],
+            (errCreate) => {
+              if (errCreate) {
+                console.error("User creation error:", errCreate);
+                return res.status(500).json({ message: "User creation failed" });
+              }
+            }
+          );
         }
-      );
-    }
-  }
-);
+      }
+    );
 
 
     // 2️⃣ Approve membership
@@ -233,6 +233,9 @@ exports.rejectStudent = (req, res) => {
 /* =========================
    ACTIVE STUDENTS
 ========================= */
+/* =========================
+   ACTIVE STUDENTS
+========================= */
 exports.getActiveStudents = (req, res) => {
   const messId = req.user.mess_id;
 
@@ -240,31 +243,32 @@ exports.getActiveStudents = (req, res) => {
     return res.status(403).json({ message: "Mess not linked to admin" });
   }
 
-  db.query(
-    `
-    SELECT DISTINCT
-      u.id AS user_id,
+  const sql = `
+    SELECT 
+      u.id AS id,
       u.name,
       u.phone,
       u.email,
-      smm.meal_slot,
-      smm.created_at
+      GROUP_CONCAT(smm.meal_slot ORDER BY smm.meal_slot SEPARATOR ' + ') AS meal_slots,
+      MIN(smm.joined_at) AS joined_at
     FROM student_mess_membership smm
     JOIN users u ON u.id = smm.user_id
     WHERE smm.status = 'ACTIVE'
       AND smm.mess_id = ?
-    ORDER BY smm.created_at DESC
-    `,
-    [messId],
-    (err, results) => {
-      if (err) {
-        console.error("Active students error:", err);
-        return res.status(500).json({ message: "DB error" });
-      }
-      res.json(results);
+    GROUP BY u.id, u.name, u.phone, u.email
+    ORDER BY joined_at DESC
+  `;
+
+  db.query(sql, [messId], (err, results) => {
+    if (err) {
+      console.error("Active students error:", err);
+      return res.status(500).json({ message: "DB error" });
     }
-  );
+
+    res.json(results);
+  });
 };
+
 
 
 /* =========================
@@ -290,34 +294,46 @@ exports.deactivateStudent = (req, res) => {
    DASHBOARD STATS
 ========================= */
 exports.getDashboardStats = (req, res) => {
+  const messId = req.user.mess_id;
+
+  if (!messId) {
+    return res.status(403).json({ message: "Mess not linked to admin" });
+  }
+
   const stats = {};
 
   db.query(
-    "SELECT COUNT(*) AS pending FROM students WHERE status='PENDING'",
+    `
+    SELECT COUNT(DISTINCT user_id) AS pending
+    FROM student_mess_membership
+    WHERE status='PENDING' AND mess_id = ?
+    `,
+    [messId],
     (err, p) => {
       if (err) return res.status(500).json({ message: "DB error" });
+
       stats.pending = p[0].pending;
 
       db.query(
-        "SELECT COUNT(*) AS active FROM students WHERE status='ACTIVE'",
+        `
+        SELECT COUNT(DISTINCT user_id) AS active
+        FROM student_mess_membership
+        WHERE status='ACTIVE' AND mess_id = ?
+        `,
+        [messId],
         (err2, a) => {
           if (err2) return res.status(500).json({ message: "DB error" });
+
           stats.active = a[0].active;
+          stats.total = stats.pending + stats.active;
 
-          db.query(
-            "SELECT COUNT(*) AS total FROM students",
-            (err3, t) => {
-              if (err3) return res.status(500).json({ message: "DB error" });
-              stats.total = t[0].total;
-
-              res.json(stats);
-            }
-          );
+          res.json(stats);
         }
       );
     }
   );
 };
+
 
 /* =========================
    PAYMENT SETTINGS

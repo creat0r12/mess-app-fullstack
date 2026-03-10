@@ -100,6 +100,28 @@ const PendingStudents = () => {
     }
   };
 
+
+  // 🔹 GROUP LUNCH + DINNER REQUESTS
+  const groupedStudents = Object.values(
+    students.reduce((acc: any, curr) => {
+      const key = `${curr.user_id}-${curr.created_at}`;
+
+      if (!acc[key]) {
+        acc[key] = {
+          ...curr,
+          meal_slots: [curr.meal_slot],
+          membership_ids: [curr.membership_id],
+        };
+      } else {
+        acc[key].meal_slots.push(curr.meal_slot);
+        acc[key].membership_ids.push(curr.membership_id);
+      }
+
+      return acc;
+    }, {})
+  );
+
+
   return (
     <div className="pending-page">
       <h2 className="page-title">Pending Student Requests</h2>
@@ -111,7 +133,7 @@ const PendingStudents = () => {
       )}
 
       <div className="pending-grid">
-        {students.map((s) => (
+        {groupedStudents.map((s: any) => (
           <div
             key={s.membership_id}
             className="student-card pending"
@@ -123,7 +145,8 @@ const PendingStudents = () => {
 
               {s.meal_slot && (
                 <p>
-                  <strong>Meal:</strong> {s.meal_slot}
+                  <strong>Meal:</strong> {s.meal_slots.join(" + ")}
+
                 </p>
               )}
 
@@ -139,8 +162,11 @@ const PendingStudents = () => {
               <button
                 className="btn approve"
                 onClick={() =>
-                  handleAction(s.membership_id, "approve")
+                  s.membership_ids.forEach((id: number) =>
+                    handleAction(id, "approve")
+                  )
                 }
+
               >
                 Approve
               </button>

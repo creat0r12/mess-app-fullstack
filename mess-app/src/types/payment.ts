@@ -1,8 +1,6 @@
 export type PaymentHistory = {
-  payment_month: string;
-  payment_year: number;
   amount: number;
-  status: "PAID" | "PENDING" | "DUE";
+status: "PAID" | "PENDING" | "DUE" | "APPLIED" | "REJECTED";
   payment_date: string | null;
   proof_url?: string | null;
 };

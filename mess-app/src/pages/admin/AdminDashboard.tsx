@@ -3,7 +3,7 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import "../../styles/AdminDashboard.css";
 import PaymentSettingsModal from "../../components/common/PaymentSettingsModal";
-
+import MessSettings from "./MessSettings";
 /* ================= TYPES ================= */
 
 type Payment = {
@@ -21,12 +21,7 @@ type PaymentSettings = {
   qr_image: string | null;
 };
 
-type MessSettings = {
-  mess_open: number;
-  notice: string | null;
-  menu: string | null;
-  image_url: string | null;
-};
+
 
 /* ================= COMPONENT ================= */
 
@@ -55,12 +50,7 @@ const AdminDashboard = () => {
     useState<PaymentSettings | null>(null);
   const [showPaymentSettings, setShowPaymentSettings] = useState(false);
 
-  /* ===== MESS SETTINGS ===== */
-  const [messOpen, setMessOpen] = useState(true);
-  const [notice, setNotice] = useState("");
-  const [menu, setMenu] = useState("");
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
+
 
   /* ================= LOAD DASHBOARD ================= */
 
@@ -74,17 +64,16 @@ const AdminDashboard = () => {
           pendingRes,
           paymentsRes,
           paymentSettingsRes,
-          messSettingsRes,
           leavesRes,
         ] = await Promise.all([
           axios.get(`${API}/api/admin/active-students`, { headers }),
           axios.get(`${API}/api/admin/pending-students`, { headers }),
           axios.get(`${API}/api/payments/recent`, { headers }),
           axios.get(`${API}/api/admin/payment-settings`, { headers }),
-          axios.get(`${API}/api/mess-settings`, { headers }),
           axios.get(`${API}/api/admin/student-leaves?status=APPROVED`, { headers }),
-
         ]);
+
+
 
         const activeList = Array.isArray(activeRes.data) ? activeRes.data : [];
         const pendingList = Array.isArray(pendingRes.data) ? pendingRes.data : [];
@@ -103,11 +92,6 @@ const AdminDashboard = () => {
         setPayments(Array.isArray(paymentsRes.data) ? paymentsRes.data : []);
         setPaymentSettings(paymentSettingsRes.data || null);
 
-        const mess: MessSettings = messSettingsRes.data;
-        setMessOpen(mess.mess_open === 1);
-        setNotice(mess.notice || "");
-        setMenu(mess.menu || "");
-        setImagePreview(mess.image_url ? `${API}${mess.image_url}` : null);
       } catch (err) {
         console.error("Dashboard load failed", err);
       }
@@ -154,16 +138,7 @@ const AdminDashboard = () => {
 
   /* ================= SAVE MESS SETTINGS ================= */
 
-  const saveMessSettings = async () => {
-    const form = new FormData();
-    form.append("mess_open", messOpen ? "1" : "0");
-    form.append("notice", notice);
-    form.append("menu", menu);
-    if (imageFile) form.append("image", imageFile);
 
-    await axios.put(`${API}/api/mess-settings`, form, { headers });
-    alert("Mess info updated successfully");
-  };
 
   /* ================= UI ================= */
 
@@ -220,50 +195,7 @@ const AdminDashboard = () => {
         </div>
       </div>
 
-      {/* ===== MESS INFO CARD ===== */}
-      <div className="mess-card">
-        <h3>Mess Information</h3>
-
-        <div className="toggle-row">
-          <span>Mess Status</span>
-          <label className="switch">
-            <input
-              type="checkbox"
-              checked={messOpen}
-              onChange={() => setMessOpen(!messOpen)}
-            />
-            <span className="slider" />
-          </label>
-        </div>
-
-        <textarea
-          placeholder="Notice for students"
-          value={notice}
-          onChange={(e) => setNotice(e.target.value)}
-        />
-
-        <textarea
-          placeholder="Menu details"
-          value={menu}
-          onChange={(e) => setMenu(e.target.value)}
-        />
-
-        {imagePreview && (
-          <img src={imagePreview} alt="Mess" className="mess-image" />
-        )}
-
-        <input
-          type="file"
-          accept="image/*"
-          onChange={(e) =>
-            e.target.files && setImageFile(e.target.files[0])
-          }
-        />
-
-        <button className="save-btn" onClick={saveMessSettings}>
-          Save Mess Info
-        </button>
-      </div>
+      <MessSettings />
 
       {/* ===== PAYMENT HISTORY ===== */}
       <div className="history-box">
