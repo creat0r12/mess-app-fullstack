@@ -59,3 +59,50 @@
   /* keeps text readable if any */
   padding: 20px;
 }
+
+
+/* =========================
+   GLOBAL DARK MODE
+========================= */
+
+body.dark {
+  background: #111;
+  color: #fff;
+}
+
+/* =========================
+   DARK MODE (APP FIX)
+========================= */
+
+/* cards everywhere */
+body.dark .card,
+body.dark .mini-card,
+body.dark .history-box,
+body.dark .settings-card {
+  background: #1f1f1f;
+  color: #fff;
+}
+
+/* inputs */
+body.dark input,
+body.dark textarea {
+  background: #2a2a2a;
+  color: #fff;
+  border: 1px solid #444;
+}
+
+/* buttons */
+body.dark button {
+  background: #333;
+  color: #fff;
+}
+
+
+
+/* =========================
+   DARK MODE BACKGROUND FIX
+========================= */
+
+body.dark .container {
+  background: #111;   /* remove image */
+}

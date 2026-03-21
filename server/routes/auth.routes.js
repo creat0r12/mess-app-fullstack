@@ -24,4 +24,9 @@ router.post(
   controller.setStudentPassword
 );
 
+
+router.post("/platform-login", controller.platformLogin);
+
 module.exports = router;
+
+

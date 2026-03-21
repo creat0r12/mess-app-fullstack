@@ -98,15 +98,18 @@ const PaymentInfoModal = ({
       })();
 
   /* ================= ACTIONS ================= */
+
   const handleAccept = async () => {
     if (!token) return alert("Unauthorized");
     if (!window.confirm("Accept this payment?")) return;
 
-    await fetch(`${API}/api/payments/accept/${payment.transaction_id}`,
+    await fetch(
+      `${API}/api/payments/transactions/accept/${payment.transaction_id}`,
       {
         method: "PUT",
         headers: { Authorization: `Bearer ${token}` },
-      });
+      }
+    );
 
     onClose();
   };
@@ -115,15 +118,16 @@ const PaymentInfoModal = ({
     if (!token) return alert("Unauthorized");
     if (!window.confirm("Reject this payment?")) return;
 
-    await fetch(`${API}/api/payments/reject/${payment.transaction_id}`, {
-      method: "PUT",
-      headers: { Authorization: `Bearer ${token}` },
-    });
-
+    await fetch(
+      `${API}/api/payments/transactions/reject/${payment.transaction_id}`,
+      {
+        method: "PUT",
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    );
 
     onClose();
   };
-
   /* ================= UI ================= */
   return (
     <div className="modal-overlay">
@@ -256,11 +260,12 @@ const PaymentInfoModal = ({
         })}
 
         {/* ADMIN ACTIONS */}
-        {isAdmin && pendingTxn && (
+        {isAdmin && payment.transaction_id && (
           <div className="modal-actions">
             <button className="accept-btn" onClick={handleAccept}>
               Accept
             </button>
+
             <button className="reject-btn" onClick={handleReject}>
               Reject
             </button>

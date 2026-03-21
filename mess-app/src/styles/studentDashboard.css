@@ -1,234 +1,109 @@
-/* =========================
-   LAYOUT
-========================= */
-
+/* ===== BASE ===== */
 .student-dashboard {
-  max-width: 1000px;
+  padding: 16px;
+  max-width: 500px;
   margin: auto;
-  padding: 20px;
+  font-family: "Segoe UI", sans-serif;
 }
 
 .welcome {
-  margin-bottom: 20px;
+  font-size: 20px;
+  font-weight: 600;
+  margin-bottom: 16px;
 }
 
-/* TOP GRID (ONLY STUDENT + MESS INFO) */
-.grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 16px;
-  margin-bottom: 10px;
-}
-
-/* GENERAL CARD */
+/* ===== CARD ===== */
 .card {
   background: #ffffff;
   border-radius: 12px;
   padding: 16px;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+  margin-bottom: 14px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
-/* FULL WIDTH CARDS (DOWN SECTION) */
-.card.full {
-  margin-top: 16px;
-}
-
-/* HEADINGS */
+/* ===== HEADINGS ===== */
 .card h3 {
+  font-size: 16px;
   margin-bottom: 10px;
 }
 
-/* TEXT HELPERS */
+/* ===== TEXT ===== */
 .muted {
-  color: #888;
+  color: #777;
 }
 
-/* STATUS COLORS */
-.status.active,
+.notice {
+  background: #f3f3f3;
+  padding: 10px;
+  border-radius: 8px;
+  margin-top: 10px;
+}
+
+/* ===== STATUS ===== */
 .on {
   color: green;
-  font-weight: bold;
+  font-weight: 600;
 }
 
-.status.inactive,
 .off {
   color: red;
-  font-weight: bold;
+  font-weight: 600;
 }
 
-/* NOTICE */
-.notice {
-  margin-top: 10px;
-  background: #f4f6f8;
-  padding: 10px;
-  border-left: 4px solid #0d6efd;
-  border-radius: 6px;
-}
-
-/* PAYMENT STATUS */
-.pending-msg {
-  color: orange;
-  font-weight: bold;
-}
-
-.paid-msg {
-  color: green;
-  font-weight: bold;
-}
-
-/* =========================
-   CURRENT PAYMENT CARD
-========================= */
-
-.payment-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.info-btn {
-  background: #ede9fe;
-  color: #6d28d9;
+/* ===== BUTTON ===== */
+.pay-btn {
+  width: 100%;
+  padding: 12px;
   border: none;
-  padding: 6px 12px;
-  border-radius: 999px;
-  font-size: 13px;
+  border-radius: 8px;
+  background: #1db954;
+  color: white;
   font-weight: 600;
   cursor: pointer;
-}
-
-.info-btn:hover {
-  background: #ddd6fe;
-}
-
-/* PAY BUTTON */
-.pay-btn {
-  margin-top: 10px;
-  background: #0d6efd;
-  color: #fff;
-  border: none;
-  padding: 10px 16px;
-  border-radius: 8px;
-  cursor: pointer;
+  transition: 0.2s;
 }
 
 .pay-btn:hover {
-  background: #084ec2;
+  background: #18a64a;
 }
 
-/* =========================
-   FORMS (POPUPS)
-========================= */
-
-.method {
-  margin: 10px 0;
-}
-
-.method label {
-  margin-right: 15px;
-}
-
-.upi-box {
-  margin-bottom: 10px;
-}
-
-.upi-box img {
-  width: 160px;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-}
-
-input[type="number"],
-input[type="file"] {
+/* ===== TEXTAREA + SELECT ===== */
+textarea,
+select {
   width: 100%;
-  margin: 8px 0;
-  padding: 8px;
-}
-
-
-/* =========================
-   LEAVE REQUEST CARD
-========================= */
-
-/* inputs inside leave card */
-.card select,
-.card textarea {
-  width: 100%;
-  margin-top: 6px;
-  margin-bottom: 10px;
-  padding: 8px;
+  margin-top: 10px;
+  padding: 10px;
   border-radius: 8px;
-  border: 1px solid #ccc;
+  border: 1px solid #ddd;
   font-size: 14px;
 }
 
-/* labels spacing */
-.card label {
-  display: block;
-  font-weight: 600;
-  margin-top: 10px;
+/* ===== LEAVE STATUS ===== */
+.status-box {
+  margin-bottom: 10px;
 }
 
-/* leave status colors */
+.leave-status {
+  font-weight: 600;
+}
+
 .leave-status.pending {
   color: orange;
-  font-weight: bold;
 }
 
 .leave-status.approved {
   color: green;
-  font-weight: bold;
 }
 
 .leave-status.rejected {
   color: red;
-  font-weight: bold;
 }
 
-/* rejected message */
+/* ===== MESSAGES ===== */
+.paid-msg {
+  color: green;
+}
+
 .error-msg {
   color: red;
-  font-weight: bold;
-  margin-top: 6px;
-}
-
-/* disable button state */
-.pay-btn:disabled {
-  background: #9ca3af;
-  cursor: not-allowed;
-}
-
-
-.mess-slots {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
-}
-
-.mess-slot {
-  border: 1px solid #e5e5e5;
-  padding: 12px;
-  border-radius: 8px;
-  background: #fafafa;
-}
-
-.mess-slot h4 {
-  margin-bottom: 8px;
-}
-
-@media (max-width: 768px) {
-  .mess-slots {
-    grid-template-columns: 1fr;
-  }
-}
-
-
-/* =========================
-   MOBILE RESPONSIVE
-========================= */
-
-@media (max-width: 768px) {
-  .grid {
-    grid-template-columns: 1fr;
-  }
 }

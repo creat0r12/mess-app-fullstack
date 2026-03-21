@@ -425,3 +425,129 @@ exports.getAllPayments = (req, res) => {
     }
   );
 };
+
+
+// =========================
+// SIMPLE PAYMENT SYSTEM
+// =========================
+
+exports.uploadSimplePayment = (req, res) => {
+  const { amount, mess_id } = req.body;
+
+  if (!req.file) {
+    return res.status(400).json({ message: "Proof required" });
+  }
+
+  // 🔹 Check payment mode
+  db.query(
+    "SELECT payment_mode FROM messes WHERE id = ?",
+    [mess_id],
+    (err, rows) => {
+      if (err || !rows.length) {
+        return res.status(500).json({ message: "Mess not found" });
+      }
+
+      const mode = rows[0].payment_mode;
+
+      // ❌ If ADVANCED → block simple payment
+      if (mode === "ADVANCED") {
+        return res.status(400).json({
+          message: "Advanced payment system enabled for this mess",
+        });
+      }
+
+      const proofUrl = `/uploads/payments/${req.file.filename}`;
+
+      db.query(
+        `
+        INSERT INTO payments_simple (user_id, mess_id, amount, proof_url)
+        VALUES (?, ?, ?, ?)
+        `,
+        [req.user.id, mess_id, amount || null, proofUrl],
+        (err2) => {
+          if (err2) {
+            console.error(err2);
+            return res.status(500).json({ message: "DB error" });
+          }
+
+          res.json({ message: "Payment submitted" });
+        }
+      );
+    }
+  );
+};
+
+exports.getSimplePayments = (req, res) => {
+  db.query(
+    `
+    SELECT 
+      p.id,
+      p.amount,
+      p.status,
+      p.proof_url,
+      p.created_at,
+      u.name AS student_name
+    FROM payments_simple p
+    JOIN users u ON u.id = p.user_id
+    ORDER BY p.created_at DESC
+    `,
+    (err, rows) => {
+      if (err) return res.status(500).json({ message: "DB error" });
+      res.json(rows);
+    }
+  );
+};
+
+
+exports.updateSimplePayment = (req, res) => {
+  const { id } = req.params;
+  const { status } = req.body;
+
+  db.query(
+    `UPDATE payments_simple SET status = ? WHERE id = ?`,
+    [status, id],
+    (err) => {
+      if (err) return res.status(500).json({ message: "DB error" });
+      res.json({ message: "Updated" });
+    }
+  );
+};
+
+exports.getMySimplePayments = (req, res) => {
+  db.query(
+    `
+    SELECT id, amount, status, proof_url, created_at
+    FROM payments_simple
+    WHERE user_id = ?
+    ORDER BY created_at DESC
+    `,
+    [req.user.id],
+    (err, rows) => {
+      if (err) return res.status(500).json({ message: "DB error" });
+      res.json(rows);
+    }
+  );
+};
+
+
+exports.cancelSimplePayment = (req, res) => {
+  const { id } = req.params;
+
+  db.query(
+    `
+    UPDATE payments_simple
+    SET status = 'REJECTED'
+    WHERE id = ? AND user_id = ? AND status = 'PENDING'
+    `,
+    [id, req.user.id],
+    (err, result) => {
+      if (err) return res.status(500).json({ message: "DB error" });
+
+      if (!result.affectedRows) {
+        return res.status(400).json({ message: "Cannot cancel" });
+      }
+
+      res.json({ message: "Payment cancelled" });
+    }
+  );
+};

@@ -13,6 +13,7 @@ type MessSettingsType = {
 const API = "http://localhost:5000";
 
 const MessSettings = () => {
+
   const token = localStorage.getItem("token");
   const headers = { Authorization: `Bearer ${token}` };
 
@@ -20,18 +21,23 @@ const MessSettings = () => {
   const [saving, setSaving] = useState(false);
 
   const [messOpen, setMessOpen] = useState(false);
+
   const [notice, setNotice] = useState("");
   const [menu, setMenu] = useState("");
 
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
 
+  const [isExpanded, setIsExpanded] = useState(false);
+
   /* =========================
-     LOAD MESS SETTINGS
+     LOAD SETTINGS
   ========================= */
+
   useEffect(() => {
-    const loadSettings = async () => {
+    const load = async () => {
       try {
+
         const res = await axios.get<MessSettingsType>(
           `${API}/api/mess-settings`,
           { headers }
@@ -45,36 +51,40 @@ const MessSettings = () => {
 
         if (data.image_url) {
           setImagePreview(`${API}${data.image_url}`);
-        } else {
-          setImagePreview(null);
         }
+
       } catch (err) {
-        console.error("Failed to load mess settings", err);
-        alert("Failed to load mess settings");
+        console.error(err);
       } finally {
         setLoading(false);
       }
     };
 
-    if (token) loadSettings();
+    if (token) load();
+
   }, [token]);
 
   /* =========================
-     HANDLE IMAGE SELECT
+     IMAGE
   ========================= */
+
   const handleImageChange = (file: File) => {
     setImageFile(file);
     setImagePreview(URL.createObjectURL(file));
   };
 
   /* =========================
-     SAVE SETTINGS
+     SAVE
   ========================= */
+
   const handleSave = async () => {
+
     setSaving(true);
 
     try {
+
       const form = new FormData();
+
       form.append("mess_open", messOpen ? "1" : "0");
       form.append("notice", notice);
       form.append("menu", menu);
@@ -85,110 +95,146 @@ const MessSettings = () => {
 
       await axios.put(`${API}/api/mess-settings`, form, { headers });
 
-      alert("Mess settings updated successfully");
+      alert("Mess settings saved");
 
       setImageFile(null);
-      alert("Saved successfully");
+
     } catch (err) {
-      console.error("Save failed", err);
-      alert("Failed to save mess settings");
+      console.error(err);
+      alert("Save failed");
+
     } finally {
       setSaving(false);
-      setLoading(false);
     }
   };
 
-  /* =========================
-     UI
-  ========================= */
   if (loading) {
-    return <p style={{ padding: "1rem" }}>Loading mess settings…</p>;
+    return <p style={{ padding: "20px" }}>Loading...</p>;
   }
 
   return (
     <div className="mess-settings-page">
 
-      {/* MESS STATUS */}
+      {/* STATUS CARD */}
+
       <div className="card">
+
         <div className="row">
+
           <div>
             <h4>Mess Status</h4>
-            <p className="muted">
-              Turn mess ON or OFF for all students
-            </p>
+            <p className="muted">ON / OFF</p>
           </div>
 
           <label className="switch">
+
             <input
               type="checkbox"
               checked={messOpen}
-              onChange={(e) => {
+              onChange={async (e) => {
+
                 const value = e.target.checked;
                 setMessOpen(value);
+
+                try {
+
+                  const form = new FormData();
+                  form.append("mess_open", value ? "1" : "0");
+                  form.append("notice", notice);
+                  form.append("menu", menu);
+
+                  await axios.put(`${API}/api/mess-settings`, form, { headers });
+
+                } catch (err) {
+                  console.error("Toggle save failed", err);
+                }
+
               }}
             />
-            <span className="slider" />
+
+            <span className="slider"></span>
+
           </label>
+
         </div>
 
         <p className={`status-text ${messOpen ? "open" : "closed"}`}>
           {messOpen ? "🟢 Mess is OPEN" : "🔴 Mess is CLOSED"}
         </p>
+
       </div>
 
-      {/* SHOW ONLY WHEN MESS IS ON */}
 
-      <>
-        {/* NOTICE */}
-        <div className="card">
-          <h4>Notice for Students</h4>
-          <textarea
-            placeholder="Write any notice for students..."
-            value={notice}
-            onChange={(e) => setNotice(e.target.value)}
-            rows={4}
-          />
+      {/* SLIDE SECTION */}
+
+      <div className={`mess-details ${messOpen ? "show" : ""}`}>
+
+        {/* NOTICE + MENU SIDE BY SIDE */}
+
+        <div className="row-two">
+
+          {/* NOTICE */}
+          <div className="card">
+            <h4>Notice</h4>
+            <input
+              type="text"
+              value={notice}
+              placeholder="Notice..."
+              onChange={(e) => setNotice(e.target.value)}
+            />
+          </div>
+
+          {/* MENU */}
+          <div className="card">
+            <h4>Menu</h4>
+            <input
+              type="text"
+              value={menu}
+              placeholder="Menu..."
+              onChange={(e) => setMenu(e.target.value)}
+            />
+          </div>
+
         </div>
 
-        {/* MENU */}
-        <div className="card">
-          <h4>Mess Menu</h4>
-          <textarea
-            placeholder="Write today's / weekly menu..."
-            value={menu}
-            onChange={(e) => setMenu(e.target.value)}
-            rows={5}
-          />
-        </div>
 
         {/* IMAGE */}
+
         <div className="card">
+
           <h4>Image (Optional)</h4>
 
           {imagePreview ? (
             <img
               src={imagePreview}
               alt="Mess"
-              className="image-preview"
+              className={`image-preview ${isExpanded ? "expanded" : ""}`}
+              onClick={() => setIsExpanded(!isExpanded)}
             />
           ) : (
             <p className="muted">No image uploaded</p>
           )}
 
           <label className="upload-btn">
-            Upload / Change Image
+
+            Upload Image
+
             <input
               type="file"
-              accept="image/*"
               hidden
+              accept="image/*"
               onChange={(e) =>
                 e.target.files && handleImageChange(e.target.files[0])
               }
             />
+
           </label>
+
         </div>
 
+
         {/* SAVE */}
+
         <button
           className="save-btn"
           onClick={handleSave}
@@ -196,8 +242,8 @@ const MessSettings = () => {
         >
           {saving ? "Saving..." : "Save Changes"}
         </button>
-      </>
 
+      </div>
 
     </div>
   );

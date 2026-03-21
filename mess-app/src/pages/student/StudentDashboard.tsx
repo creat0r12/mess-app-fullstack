@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import "../../styles/studentDashboard.css";
 import StudentPaymentPopup from "../../components/common/StudentPaymentPopup";
-import PaymentInfoModal from "../../components/PaymentInfoModal";
 
 const API = "http://localhost:5000";
 
@@ -9,45 +8,25 @@ const StudentDashboard = () => {
   const token = localStorage.getItem("token");
 
   const [student, setStudent] = useState<any>(null);
-  const [payment, setPayment] = useState<any>(null);
-
   const [messSettings, setMessSettings] = useState<any>(null);
-  const [paymentSettings, setPaymentSettings] = useState<any>(null);
 
   const [loading, setLoading] = useState(true);
   const [showPaymentPopup, setShowPaymentPopup] = useState(false);
 
-  const [showPaymentInfo, setShowPaymentInfo] = useState(false);
-  const [paymentHistory, setPaymentHistory] = useState<any[]>([]);
-
-  // 🔹 LEAVE STATES (already added by you)
+  // 🔹 LEAVE STATES
   const [leaveDate, setLeaveDate] = useState("");
   const [leaveReason, setLeaveReason] = useState("");
   const [leaveStatus, setLeaveStatus] = useState<string | null>(null);
   const [leaveLoading, setLeaveLoading] = useState(false);
 
-  // ✅ ONLY REQUIRED FIX (DO NOT REMOVE)
+
+  const [myPayments, setMyPayments] = useState<any[]>([]);
+
+
   const hasLeaveRequest =
     leaveStatus !== null &&
     leaveStatus !== undefined &&
     leaveStatus !== "RETURNED";
-
-
-
-
-  // ================= PAYMENT HISTORY =================
-  useEffect(() => {
-    if (!token) return;
-
-    fetch(`${API}/api/payments/history`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    })
-      .then((res) => res.json())
-      .then((data) => setPaymentHistory(data || []))
-      .catch(() => setPaymentHistory([]));
-  }, [token]);
 
   /* ================= LOAD STUDENT ================= */
   useEffect(() => {
@@ -65,49 +44,6 @@ const StudentDashboard = () => {
       .then(setMessSettings)
       .catch(() => setMessSettings(null));
   }, []);
-
-  /* ================= LOAD PAYMENT SETTINGS ================= */
-  // useEffect(() => {
-  //   const loadPaymentSettings = async () => {
-  //     try {
-  //       const res = await fetch(`${API}/api/payments/settings`);
-  //       if (!res.ok) return;
-  //       const data = await res.json();
-  //       setPaymentSettings(data);
-  //     } catch {
-  //       setPaymentSettings(null);
-  //     }
-  //   };
-
-  //   loadPaymentSettings();
-  // }, []);
-
-  /* ================= LOAD CURRENT PAYMENT ================= */
-  useEffect(() => {
-    if (!token) return;
-
-    fetch(`${API}/api/payments/student`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    })
-      .then((res) => {
-        if (!res.ok) throw new Error("Unauthorized");
-        return res.json();
-      })
-      .then((data) => {
-        if (!data || Object.keys(data).length === 0) {
-          setPayment(null);
-        } else {
-          setPayment(data);
-        }
-      })
-      .catch(() => setPayment(null));
-  }, [token]);
-
-
-
-
 
   /* ================= LOAD LEAVE STATUS ================= */
   useEffect(() => {
@@ -128,7 +64,6 @@ const StudentDashboard = () => {
           return;
         }
 
-        // 🔹 If student has RETURNED, apply 1-day cooldown
         if (data.status === "RETURNED") {
           if (!data.returned_at) {
             setLeaveStatus("RETURNED");
@@ -137,58 +72,26 @@ const StudentDashboard = () => {
 
           const returnedAt = new Date(data.returned_at);
           const now = new Date();
-
           const diffMs = now.getTime() - returnedAt.getTime();
           const diffDays = diffMs / (1000 * 60 * 60 * 24);
 
-          // ✅ After 1 day → allow new leave
           if (diffDays >= 1) {
-            setLeaveStatus(null); // show leave form again
+            setLeaveStatus(null);
           } else {
-            setLeaveStatus("RETURNED"); // still in cooldown
+            setLeaveStatus("RETURNED");
           }
 
           return;
         }
 
-        // 🔹 Normal flow
-        setLeaveStatus(data.status); // PENDING / APPROVED / REJECTED
+        setLeaveStatus(data.status);
       })
       .catch(() => {
         setLeaveStatus(null);
       });
   }, [token]);
 
-
-
-  const cancelPendingPayment = async () => {
-    if (!window.confirm("Cancel pending payment?")) return;
-
-    try {
-      const res = await fetch(`${API}/api/payments/cancel`, {
-        method: "PUT",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        alert(data.message || "Failed to cancel payment");
-        return;
-      }
-
-      alert("Payment cancelled. You can submit again.");
-      setPayment(null); // reset UI
-    } catch {
-      alert("Server error");
-    }
-  };
-
-
-
-  // ================= SUBMIT LEAVE =================
+  /* ================= SUBMIT LEAVE ================= */
   const submitLeaveRequest = async () => {
     if (!leaveDate) {
       alert("Please select leave date");
@@ -220,141 +123,108 @@ const StudentDashboard = () => {
       setLeaveStatus("PENDING");
       setLeaveDate("");
       setLeaveReason("");
-      alert("Leave request submitted. Waiting for admin approval.");
+      alert("Leave request submitted");
     } catch {
-      alert("Server error while submitting leave");
+      alert("Server error");
     } finally {
       setLeaveLoading(false);
     }
   };
 
 
+  useEffect(() => {
+  if (!token) return;
 
-
+  fetch(`${API}/api/payments/simple/my`, {
+    headers: { Authorization: `Bearer ${token}` },
+  })
+    .then((res) => res.json())
+    .then((data) => setMyPayments(data || []));
+}, [token]);
 
   if (loading) return <p>Loading...</p>;
   if (!student) return <p>Please login again</p>;
 
   return (
     <div className="student-dashboard">
-      {/* 🔴 EVERYTHING BELOW IS EXACTLY YOUR ORIGINAL JSX 🔴 */}
-
       <h2 className="welcome">Welcome, {student.name}</h2>
 
-      <div className="grid">
-        {/* STUDENT INFO */}
-        <div className="card">
-          <h3>Student Information</h3>
-          <p><strong>Name:</strong> {student.name}</p>
-          <p><strong>Phone:</strong> {student.phone}</p>
-          <p><strong>Status:</strong> {student.status}</p>
-        </div>
-
-        {/* MESS INFO */}
-        <div className="card">
-          <h3>Mess Information</h3>
-
-          {messSettings ? (
-            <>
-              <p>
-                <strong>Status:</strong>{" "}
-                <span className={messSettings.mess_open ? "on" : "off"}>
-                  {messSettings.mess_open ? "OPEN" : "CLOSED"}
-                </span>
-              </p>
-
-              {messSettings.notice && (
-                <div className="notice">
-                  <strong>Notice</strong>
-                  <p>{messSettings.notice}</p>
-                </div>
-              )}
-            </>
-          ) : (
-            <p className="muted">Mess info not available</p>
-          )}
-        </div>
-      </div>
-
-      {/* PAYMENT CARD */}
+      {/* 💳 PAYMENT BLOCK */}
       <div className="card">
-        <div className="payment-header">
-          <h3>Current Payment</h3>
+  <h3>Your Payment</h3>
 
-          {payment && (
-            <button
-              className="info-btn"
-              onClick={() => setShowPaymentInfo(true)}
-            >
-              Payment Info
-            </button>
-          )}
-        </div>
+  <button
+    className="pay-btn"
+    onClick={() => setShowPaymentPopup(true)}
+  >
+    Make Payment
+  </button>
 
-        {!payment && <p className="muted">No payment assigned yet</p>}
+  {myPayments.map((p: any) => (
+    <div key={p.id} style={{ marginTop: "12px" }}>
+      <p><strong>Amount:</strong> ₹{p.amount}</p>
+      <p><strong>Status:</strong> {p.status}</p>
 
-        {payment && (
+      <img
+        src={`${API}${p.proof_url}`}
+        style={{ width: "100%", borderRadius: "8px" }}
+      />
+
+      {p.status === "PENDING" && (
+        <button
+          className="danger-btn"
+          onClick={async () => {
+            await fetch(`${API}/api/payments/simple/cancel/${p.id}`, {
+              method: "PUT",
+              headers: { Authorization: `Bearer ${token}` },
+            });
+
+            // update UI instantly
+            setMyPayments((prev) =>
+              prev.map((x) =>
+                x.id === p.id ? { ...x, status: "REJECTED" } : x
+              )
+            );
+          }}
+        >
+          Cancel Payment
+        </button>
+      )}
+    </div>
+  ))}
+</div>
+
+      {/* 🍽️ MESS INFO + MENU */}
+      <div className="card">
+        <h3>Mess Information</h3>
+
+        {messSettings ? (
           <>
-            <p><strong>Due:</strong> ₹{payment.due_amount}</p>
-            <p><strong>Status:</strong> {payment.status}</p>
+            <p>
+              <strong>Status:</strong>{" "}
+              <span className={messSettings.mess_open ? "on" : "off"}>
+                {messSettings.mess_open ? "OPEN" : "CLOSED"}
+              </span>
+            </p>
 
-            {/* ✅ SINGLE SOURCE OF TRUTH BUTTON */}
-            {/* 🟢 NORMAL PAYMENT */}
-            {payment.status !== "PENDING" && payment.status !== "REJECTED" && (
-              <button
-                className="pay-btn"
-                onClick={() => setShowPaymentPopup(true)}
-              >
-                Make Payment
-              </button>
+            {messSettings.notice && (
+              <div className="notice">
+                <strong>Notice</strong>
+                <p>{messSettings.notice}</p>
+              </div>
             )}
 
-            {/* ⏳ PENDING → CANCEL */}
-            {payment.status === "PENDING" && (
-              <>
-                <p className="pending-msg">Waiting for admin approval</p>
-                <button className="danger-btn" onClick={cancelPendingPayment}>
-                  Cancel Payment
-                </button>
-              </>
-            )}
-
-            {/* ❌ REJECTED → RETRY */}
-            {payment.status === "REJECTED" && (
-              <button
-                className="pay-btn"
-                onClick={() => setShowPaymentPopup(true)}
-              >
-                Retry Payment
-              </button>
-            )}
-
-
-            {/* ⏳ ADMIN ACTION PENDING */}
-            {payment.status === "PENDING" && (
-              <p className="pending-msg">Waiting for admin approval</p>
-            )}
-
-            {/* ℹ️ INFO ONLY (NO LOGIC) */}
-            {payment.status === "PAID" && (
-              <p className="paid-msg">Payment completed ✅</p>
-            )}
+            <div style={{ marginTop: "10px" }}>
+              <strong>Today's Menu</strong>
+              <p>{messSettings.menu || "Not updated"}</p>
+            </div>
           </>
-        )}
-      </div>
-
-
-      {/* MENU */}
-      <div className="card">
-        <h3>Today's Menu</h3>
-        {messSettings?.menu ? (
-          <p>{messSettings.menu}</p>
         ) : (
-          <p className="muted">Menu not updated</p>
+          <p className="muted">Mess info not available</p>
         )}
       </div>
 
-      {/* ✅ LEAVE REQUEST CARD */}
+      {/* 📝 LEAVE REQUEST */}
       <div className="card">
         <h3>Leave Request</h3>
 
@@ -362,148 +232,97 @@ const StudentDashboard = () => {
           <div className="status-box">
             <p>
               <strong>Status:</strong>{" "}
-              <span className={`leave-status ${leaveStatus?.toLowerCase() || ""}`}>
+              <span className={`leave-status ${leaveStatus?.toLowerCase()}`}>
                 {leaveStatus}
               </span>
             </p>
 
-            {/* ⏳ PENDING */}
             {leaveStatus === "PENDING" && (
-              <p className="muted">
-                Your leave request has been sent.<br />
-                Waiting for admin approval ⏳
-              </p>
+              <p className="muted">Waiting for admin approval ⏳</p>
             )}
 
-            {/* ✅ APPROVED */}
             {leaveStatus === "APPROVED" && (
-              <p className="paid-msg">
-                Leave approved by admin ✅<br />
-                Enjoy your leave.
-              </p>
+              <p className="paid-msg">Leave approved ✅</p>
             )}
 
-            {/* 🔄 RETURN REQUESTED BY ADMIN */}
             {leaveStatus === "RETURN_REQUESTED" && (
               <>
-                <p className="muted">
-                  Admin has requested you to confirm your return to the mess.
-                </p>
-
+                <p className="muted">Admin asked to confirm return</p>
                 <button
                   className="pay-btn"
                   onClick={async () => {
-                    try {
-                      const res = await fetch(
-                        `${API}/api/student/leave/confirm-return`,
-                        {
-                          method: "PUT",
-                          headers: {
-                            Authorization: `Bearer ${token}`,
-                          },
-                        }
-                      );
-
-                      const data = await res.json();
-
-                      if (!res.ok) {
-                        alert(data.message || "Failed to confirm return");
-                        return;
+                    const res = await fetch(
+                      `${API}/api/student/leave/confirm-return`,
+                      {
+                        method: "PUT",
+                        headers: {
+                          Authorization: `Bearer ${token}`,
+                        },
                       }
+                    );
 
-                      alert("Return confirmed successfully ✅");
-                      setLeaveStatus("RETURNED"); // ⚠️ IMPORTANT
-                    } catch {
-                      alert("Server error");
+                    if (res.ok) {
+                      setLeaveStatus("RETURNED");
+                      alert("Return confirmed");
                     }
                   }}
                 >
-                  Confirm Return to Mess
+                  Confirm Return
                 </button>
               </>
             )}
 
-            {/* 🕒 COOLDOWN STATE */}
             {leaveStatus === "RETURNED" && (
-              <p className="muted">
-                You have recently returned to the mess.<br />
-                You can apply for leave again after 24 hours ⏳
-              </p>
+              <p className="muted">You can apply again after 24h</p>
             )}
 
-            {/* ❌ REJECTED */}
             {leaveStatus === "REJECTED" && (
-              <p className="error-msg">
-                Leave rejected by admin ❌<br />
-                Please contact admin for details.
-              </p>
+              <p className="error-msg">Leave rejected ❌</p>
             )}
           </div>
         )}
 
-        {/* 📝 LEAVE FORM (VISIBLE ONLY WHEN ALLOWED) */}
         {!hasLeaveRequest && (
           <>
-            <label>
-              Leave Date
-              <select
-                value={leaveDate}
-                onChange={(e) => setLeaveDate(e.target.value)}
+            <select
+              value={leaveDate}
+              onChange={(e) => setLeaveDate(e.target.value)}
+            >
+              <option value="">Select leave date</option>
+              <option value={new Date().toISOString().slice(0, 10)}>
+                Today
+              </option>
+              <option
+                value={new Date(Date.now() + 86400000)
+                  .toISOString()
+                  .slice(0, 10)}
               >
-                <option value="">Select leave date</option>
-                <option value={new Date().toISOString().slice(0, 10)}>
-                  Today
-                </option>
-                <option
-                  value={new Date(Date.now() + 86400000)
-                    .toISOString()
-                    .slice(0, 10)}
-                >
-                  Tomorrow
-                </option>
-              </select>
-            </label>
+                Tomorrow
+              </option>
+            </select>
 
-            <label>
-              Reason (optional)
-              <textarea
-                placeholder="Reason for leave"
-                value={leaveReason}
-                onChange={(e) => setLeaveReason(e.target.value)}
-              />
-            </label>
+            <textarea
+              placeholder="Reason (optional)"
+              value={leaveReason}
+              onChange={(e) => setLeaveReason(e.target.value)}
+            />
 
             <button
               className="pay-btn"
               onClick={submitLeaveRequest}
               disabled={leaveLoading}
             >
-              {leaveLoading ? "Submitting..." : "Submit Leave Request"}
+              {leaveLoading ? "Submitting..." : "Submit Leave"}
             </button>
           </>
         )}
       </div>
 
-
-      {/* PAYMENT POPUP */}
-      {showPaymentPopup && payment && (
+      {/* 💳 PAYMENT POPUP */}
+      {showPaymentPopup && (
         <StudentPaymentPopup
-          payment={payment}
-          paymentSettings={paymentSettings}
+          mess_id={student?.mess_id || 1}
           onClose={() => setShowPaymentPopup(false)}
-          onSuccess={(updatedPayment: any) => {
-            setPayment(updatedPayment);
-            setShowPaymentPopup(false);
-          }}
-        />
-      )}
-
-      {/* PAYMENT INFO MODAL */}
-      {showPaymentInfo && payment && (
-        <PaymentInfoModal
-          payment={payment}
-          history={paymentHistory}
-          onClose={() => setShowPaymentInfo(false)}
         />
       )}
     </div>

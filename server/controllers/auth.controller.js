@@ -79,8 +79,9 @@ exports.studentLogin = async (req, res) => {
 
   const sql = `
     SELECT *
-    FROM students
-    WHERE status = 'ACTIVE'
+    FROM users
+    WHERE role = 'STUDENT'
+      AND status = 'ACTIVE'
       AND (phone = ? OR name = ?)
     LIMIT 1
   `;
@@ -93,22 +94,20 @@ exports.studentLogin = async (req, res) => {
 
     if (results.length === 0) {
       return res.status(401).json({
-        message: "Invalid credentials or account not approved",
+        message: "Invalid credentials",
       });
     }
 
-    const student = results[0];
+    const user = results[0];
 
-    // 🔑 PASSWORD NOT SET YET → FIRST LOGIN
-    if (!student.password) {
+    if (!user.password) {
       return res.json({
         firstLogin: true,
-        phone: student.phone,
+        phone: user.phone,
       });
     }
 
-    // 🔐 Compare hashed password
-    const isMatch = await bcrypt.compare(password, student.password);
+    const isMatch = await bcrypt.compare(password, user.password);
 
     if (!isMatch) {
       return res.status(401).json({
@@ -116,18 +115,21 @@ exports.studentLogin = async (req, res) => {
       });
     }
 
-    res.json({
-      message: "Login successful",
-      student: {
-        id: student.id,
-        name: student.name,
-        phone: student.phone,
-        gender: student.gender,
+    const token = jwt.sign(
+      {
+        id: user.id,
+        role: user.role,
       },
+      process.env.JWT_SECRET,
+      { expiresIn: "7d" }
+    );
+
+    res.json({
+      token,
+      role: user.role,
     });
   });
 };
-
 
 
 
@@ -190,4 +192,55 @@ exports.setStudentPassword = async (req, res) => {
       );
     }
   );
+};
+
+
+
+exports.platformLogin = (req, res) => {
+  const { email, password } = req.body;
+
+  if (!email || !password) {
+    return res.status(400).json({ message: "Missing credentials" });
+  }
+
+  const sql = `
+    SELECT *
+    FROM users
+    WHERE role = 'PLATFORM_ADMIN'
+      AND email = ?
+    LIMIT 1
+  `;
+
+  db.query(sql, [email], async (err, results) => {
+    if (err) {
+      console.error("PLATFORM LOGIN ERROR:", err);
+      return res.status(500).json({ message: "DB error" });
+    }
+
+    if (results.length === 0) {
+      return res.status(401).json({ message: "Invalid credentials" });
+    }
+
+    const user = results[0];
+
+    const isMatch = await bcrypt.compare(password, user.password);
+
+    if (!isMatch) {
+      return res.status(401).json({ message: "Invalid credentials" });
+    }
+
+    const token = jwt.sign(
+      {
+        id: user.id,
+        role: user.role,
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: "7d" }
+    );
+
+    res.json({
+      token,
+      role: user.role,
+    });
+  });
 };

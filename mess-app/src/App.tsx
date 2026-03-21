@@ -21,8 +21,11 @@ import FindMess from "./pages/FindMess";
 import CreateMess from "./pages/CreateMess";
 import PlatformAdminLogin from "./pages/platform/PlatformAdminLogin";
 import PlatformMessRequests from "./pages/platform/PlatformMessRequests";
+import Settings from "./pages/settings/Settings";
 
 import "./styles/basicPages.css";
+
+
 
 /* ======================
    BASIC PAGES
@@ -89,7 +92,7 @@ function App() {
         <Route path="/student/request" element={<StudentRequest />} />
         <Route path="/admin/login" element={<AdminLogin />} />
         <Route path="/find-mess" element={<FindMess />} />
-
+        <Route path="/settings" element={<Settings />} />
         {/* CREATE MESS */}
         <Route path="/create-mess" element={<CreateMess />} />
 

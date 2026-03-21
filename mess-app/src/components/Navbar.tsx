@@ -95,6 +95,8 @@ const Navbar = () => {
                   <Link to="/student/dashboard">My Dashboard</Link>
                 )}
 
+                {/* ✅ ADD THIS */}
+                <Link to="/settings">Settings</Link>
 
                 <button className="logout-btn" onClick={handleLogout}>
                   Logout

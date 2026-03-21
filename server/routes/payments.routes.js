@@ -48,11 +48,7 @@ router.get("/history", studentAuth, controller.getMyPaymentHistory);
 /* =========================
    PAYMENT HISTORY (ADMIN)
 ========================= */
-router.get(
-  "/history/:studentId",
-  adminAuth,
-  controller.getStudentPaymentHistory
-);
+router.get("/history/:membershipId", adminAuth, controller.getStudentPaymentHistory);
 
 /* =========================
    STUDENT: CURRENT PAYMENT
@@ -86,5 +82,33 @@ router.get(
 
 
 router.get("/all", adminAuth, controller.getAllPayments);
+
+
+// SIMPLE PAYMENT SYSTEM
+
+router.post(
+  "/simple/upload",
+  studentAuth,
+  upload.single("proof"),
+  controller.uploadSimplePayment
+);
+
+router.get(
+  "/simple",
+  adminAuth,
+  controller.getSimplePayments
+);
+
+router.put(
+  "/simple/:id",
+  adminAuth,
+  controller.updateSimplePayment
+);
+
+router.get(
+  "/simple/my",
+  studentAuth,
+  controller.getMySimplePayments
+);
 
 module.exports = router;

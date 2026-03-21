@@ -153,6 +153,28 @@
   background: #fff;
 }
 
+
+/* =========================
+   DARK MODE NAVBAR
+========================= */
+
+body.dark .navbar {
+  background: #1a1a1a;
+  border-bottom: 1px solid #333;
+}
+
+body.dark .navbar-title {
+  color: #fff;
+}
+
+body.dark .navbar-links a {
+  color: #90ee90;
+}
+
+body.dark .navbar-btn {
+  background: #333;
+  color: #fff;
+}
 /* =========================
    MOBILE FRIENDLY
 ========================= */
@@ -170,4 +192,31 @@
     font-size: 13px;
     padding: 7px 10px;
   }
+}
+
+
+/* =========================
+   DARK MODE DROPDOWN
+========================= */
+
+body.dark .account-dropdown {
+  background: #1f1f1f;
+  border: 1px solid #333;
+}
+
+body.dark .account-role {
+  background: #2a2a2a;
+  color: #ccc;
+  border-bottom: 1px solid #333;
+}
+
+body.dark .account-dropdown a,
+body.dark .logout-btn {
+  background: #1f1f1f;
+  color: #eee;
+  border-bottom: 1px solid #2a2a2a;
+}
+
+body.dark .logout-btn {
+  color: #f87171;
 }

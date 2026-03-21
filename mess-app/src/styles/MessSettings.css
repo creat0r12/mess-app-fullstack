@@ -1,196 +1,218 @@
-/* ================================
-   PAGE WRAPPER
+/* ===============================
+PAGE (compact mobile)
 ================================ */
+
 .mess-settings-page {
-  padding: 1rem;
-  max-width: 720px;
-  margin: 0 auto;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  font-family: system-ui, -apple-system, sans-serif;
 }
 
-.page-title {
-  font-size: 1.4rem;
-  font-weight: 600;
-  margin-bottom: 1rem;
-  text-align: center;
-}
 
-/* ================================
-   CARD
+/* ===============================
+CARD (small + tight)
 ================================ */
+
 .card {
   background: #ffffff;
-  border-radius: 12px;
-  padding: 1rem;
-  margin-bottom: 1rem;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
+  border-radius: 10px;
+  padding: 10px;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.05);
 }
 
 .card h4 {
-  margin: 0 0 0.5rem;
-  font-size: 1rem;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 6px;
 }
 
-.muted {
-  font-size: 0.85rem;
-  color: #6b7280;
-}
 
-/* ================================
-   ROW / FLEX
+/* ===============================
+ROW
 ================================ */
+
 .row {
   display: flex;
-  align-items: center;
   justify-content: space-between;
-  gap: 1rem;
+  align-items: center;
 }
 
-/* ================================
-   TOGGLE SWITCH
+
+/* ===============================
+TEXT
 ================================ */
-.switch {
-  position: relative;
-  display: inline-block;
-  width: 48px;
-  height: 26px;
+
+.muted {
+  font-size: 11px;
+  color: #666;
 }
 
-.switch input {
-  opacity: 0;
-  width: 0;
-  height: 0;
-}
 
-.slider {
-  position: absolute;
-  cursor: pointer;
-  inset: 0;
-  background-color: #ccc;
-  transition: 0.3s;
-  border-radius: 34px;
-}
-
-.slider:before {
-  content: "";
-  position: absolute;
-  height: 20px;
-  width: 20px;
-  left: 3px;
-  bottom: 3px;
-  background-color: white;
-  transition: 0.3s;
-  border-radius: 50%;
-}
-
-.switch input:checked + .slider {
-  background-color: #22c55e;
-}
-
-.switch input:checked + .slider:before {
-  transform: translateX(22px);
-}
-
-/* ================================
-   STATUS TEXT
+/* ===============================
+STATUS TEXT
 ================================ */
+
 .status-text {
-  margin-top: 0.75rem;
+  margin-top: 6px;
+  font-size: 12px;
   font-weight: 500;
 }
 
 .status-text.open {
-  color: #16a34a;
+  color: #22c55e;
 }
 
 .status-text.closed {
-  color: #dc2626;
+  color: #ef4444;
 }
 
-/* ================================
-   TEXTAREA
+
+/* ===============================
+TOGGLE SWITCH (slightly smaller)
 ================================ */
-textarea {
+
+.switch {
+  position: relative;
+  width: 44px;
+  height: 22px;
+}
+
+.switch input {
+  display: none;
+}
+
+.slider {
+  position: absolute;
+  inset: 0;
+  background: #ccc;
+  border-radius: 20px;
+  transition: 0.3s;
+}
+
+.slider::before {
+  content: "";
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  top: 2px;
+  left: 2px;
+  background: white;
+  border-radius: 50%;
+  transition: 0.3s;
+}
+
+.switch input:checked + .slider {
+  background: #22c55e;
+}
+
+.switch input:checked + .slider::before {
+  transform: translateX(22px);
+}
+
+
+/* ===============================
+INPUT (single line)
+================================ */
+
+input[type="text"] {
   width: 100%;
-  resize: vertical;
-  border-radius: 10px;
-  border: 1px solid #d1d5db;
-  padding: 0.75rem;
-  font-size: 0.9rem;
-  font-family: inherit;
+  padding: 8px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  font-size: 12px;
+  margin-top: 6px;
 }
 
-textarea:focus {
+input[type="text"]:focus {
   outline: none;
-  border-color: #2563eb;
+  border-color: #22c55e;
 }
 
-/* ================================
-   IMAGE PREVIEW
+
+.row-two {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+@media (max-width: 380px) {
+  .row-two {
+    grid-template-columns: 1fr;
+  }
+}
+/* ===============================
+IMAGE PREVIEW (small)
 ================================ */
+
 .image-preview {
   width: 100%;
-  max-height: 240px;
+  max-height: 100px;
   object-fit: cover;
-  border-radius: 10px;
-  margin: 0.75rem 0;
-  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  margin-top: 6px;
+  transition: 0.3s;
+  cursor: pointer;
 }
 
-/* ================================
-   UPLOAD BUTTON
+.image-preview.expanded {
+  max-height: 300px;
+}
+
+
+/* ===============================
+UPLOAD BUTTON (compact)
 ================================ */
+
 .upload-btn {
   display: inline-block;
-  background: #f1f5f9;
-  color: #1f2937;
-  padding: 0.6rem 1rem;
+  margin-top: 8px;
+  padding: 8px 12px;
   border-radius: 8px;
-  font-size: 0.85rem;
-  font-weight: 500;
+  background: #3498db;
+  color: white;
+  font-size: 12px;
   cursor: pointer;
-  border: 1px dashed #cbd5f5;
-  transition: background 0.2s ease;
 }
 
-.upload-btn:hover {
-  background: #e2e8f0;
-}
 
-/* ================================
-   SAVE BUTTON
+/* ===============================
+SAVE BUTTON (compact)
 ================================ */
+
 .save-btn {
   width: 100%;
-  margin-top: 1rem;
-  background: #2563eb;
-  color: #ffffff;
+  padding: 10px;
   border: none;
-  padding: 0.8rem;
   border-radius: 10px;
-  font-size: 1rem;
+  font-size: 13px;
   font-weight: 600;
-  cursor: pointer;
-  transition: background 0.2s ease;
-}
-
-.save-btn:hover {
-  background: #1d4ed8;
+  background: #22c55e;
+  color: white;
+  margin-top: 8px;
 }
 
 .save-btn:disabled {
-  background: #9ca3af;
-  cursor: not-allowed;
+  background: #bbb;
 }
 
-/* ================================
-   DESKTOP ENHANCEMENT
-================================ */
-@media (min-width: 768px) {
-  .mess-settings-page {
-    padding: 2rem;
-  }
 
-  .page-title {
-    text-align: left;
-  }
+/* ===============================
+SLIDE SECTION (tight spacing)
+================================ */
+
+.mess-details {
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.mess-details.show {
+  max-height: 1000px;
+  opacity: 1;
 }
