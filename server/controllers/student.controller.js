@@ -293,16 +293,23 @@ exports.requestMessJoin = (req, res) => {
 
         db.query(
           `
-          INSERT INTO student_mess_membership
-            (user_id, mess_id, meal_slot, gender, status)
-          VALUES ?
-          `,
+  INSERT IGNORE INTO student_mess_membership
+    (user_id, mess_id, meal_slot, gender, status)
+  VALUES ?
+  `,
           [values],
-          (err2) => {
+          (err2, result) => {
             if (err2) {
               console.error("Membership error:", err2);
+              return res.status(500).json({
+                message: "Membership insert failed",
+              });
+            }
+
+            // 🔥 IMPORTANT ADD THIS
+            if (result.affectedRows === 0) {
               return res.status(400).json({
-                message: err2.sqlMessage || "Membership error",
+                message: "You already requested these meal slots",
               });
             }
 

@@ -335,35 +335,39 @@ exports.getStudentPaymentHistory = (req, res) => {
 /* =========================
    STUDENT: CANCEL PENDING PAYMENT
 ========================= */
+// exports.cancelPendingPayment = (req, res) => {
+//   const membershipId = req.user.membership_id;
+
+//   db.query(
+//     `
+//     UPDATE payment_transactions
+//     SET status = 'CANCELLED'
+//     WHERE membership_id = ?
+//       AND status = 'PENDING'
+//     `,
+//     [membershipId],
+//     (err, result) => {
+//       if (err) {
+//         console.error("CANCEL PAYMENT ERROR:", err);
+//         return res.status(500).json({ message: "DB error" });
+//       }
+
+//       if (result.affectedRows === 0) {
+//         return res
+//           .status(400)
+//           .json({ message: "No pending payment to cancel" });
+//       }
+
+//       res.json({ message: "Pending payment cancelled" });
+//     }
+//   );
+// };
+
 exports.cancelPendingPayment = (req, res) => {
-  const membershipId = req.user.membership_id;
-
-  db.query(
-    `
-    UPDATE payment_transactions
-    SET status = 'REJECTED'
-    WHERE membership_id = ?
-      AND status = 'PENDING'
-    `,
-    [membershipId],
-    (err, result) => {
-      if (err) {
-        console.error("CANCEL PAYMENT ERROR:", err);
-        return res.status(500).json({ message: "DB error" });
-      }
-
-      if (result.affectedRows === 0) {
-        return res
-          .status(400)
-          .json({ message: "No pending payment to cancel" });
-      }
-
-      res.json({ message: "Pending payment cancelled" });
-    }
-  );
+  return res.status(400).json({
+    message: "Old payment system disabled",
+  });
 };
-
-
 
 
 /* =========================
@@ -536,7 +540,7 @@ exports.cancelSimplePayment = (req, res) => {
   db.query(
     `
     UPDATE payments_simple
-    SET status = 'REJECTED'
+    SET status = 'CANCELLED'
     WHERE id = ? AND user_id = ? AND status = 'PENDING'
     `,
     [id, req.user.id],
@@ -548,6 +552,32 @@ exports.cancelSimplePayment = (req, res) => {
       }
 
       res.json({ message: "Payment cancelled" });
+    }
+  );
+};
+
+
+
+exports.getRecentSimplePayments = (req, res) => {
+  db.query(
+    `
+    SELECT 
+      p.id,
+      p.amount,
+      p.status,
+      p.created_at,
+      u.name AS student_name
+    FROM payments_simple p
+    JOIN users u ON u.id = p.user_id
+    ORDER BY p.created_at DESC
+    LIMIT 10
+    `,
+    (err, rows) => {
+      if (err) {
+        console.error("RECENT SIMPLE PAYMENTS ERROR:", err);
+        return res.status(500).json({ message: "DB error" });
+      }
+      res.json(rows);
     }
   );
 };

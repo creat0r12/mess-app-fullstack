@@ -1,69 +1,65 @@
 import { useEffect, useState } from "react";
-import PaymentInfoModal from "../../components/PaymentInfoModal";
 import { getToken } from "../../utils/auth";
 import "../../styles/Payments.css";
-
-import type { PaymentHistory } from "../../types/payment";
+import PaymentModalSimple from "../../components/common/payment/PaymentModalSimple";
 
 const API = "http://localhost:5000";
 
 /* ================= TYPES ================= */
 
-type PaymentTransaction = {
-  transaction_id: number;
-  membership_id: number;
+type Payment = {
+  id: number;
   student_name: string;
-  phone?: string;
-
   amount: number;
-  submitted_at: string;
-  proof_url: string;
+  status: "PENDING" | "APPROVED" | "REJECTED" | "CANCELLED";
+  created_at: string;
 };
 
-const Payments = () => {
+/* ================= COMPONENT ================= */
 
+const Payments = () => {
   const token = getToken();
 
-  const [payments, setPayments] = useState<PaymentTransaction[]>([]);
+  const [payments, setPayments] = useState<Payment[]>([]);
   const [search, setSearch] = useState("");
+  const [selected, setSelected] = useState<Payment | null>(null);
 
-  const [selected, setSelected] =
-    useState<PaymentTransaction | null>(null);
-
-  const [history, setHistory] =
-    useState<PaymentHistory[]>([]);
-
-  /* ================= LOAD PENDING PAYMENTS ================= */
+  /* ================= LOAD SIMPLE PAYMENTS ================= */
 
   const fetchPayments = async () => {
-
     if (!token) return;
 
     try {
+      const res = await fetch(`${API}/api/payments/simple`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
-      const res = await fetch(
-        `${API}/api/payments/transactions/pending`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-
-      if (!res.ok) {
+      const data = await res.json();
+      if (!Array.isArray(data)) {
         setPayments([]);
         return;
       }
 
-      const data = await res.json();
+      const grouped = Object.values(
+        data.reduce((acc: any, curr: any) => {
+          const key = curr.student_name;
 
-      setPayments(Array.isArray(data) ? data : []);
+          if (
+            !acc[key] ||
+            new Date(curr.created_at) > new Date(acc[key].created_at)
+          ) {
+            acc[key] = curr;
+          }
 
+          return acc;
+        }, {})
+      );
+
+      setPayments(grouped as any);
     } catch (err) {
-
       console.error(err);
       setPayments([]);
-
     }
-
   };
 
   useEffect(() => {
@@ -73,67 +69,18 @@ const Payments = () => {
   /* ================= SEARCH ================= */
 
   const filtered = payments.filter((p) => {
-
     if (!search.trim()) return true;
-
-    const q = search.toLowerCase();
-
-    return (
-      p.student_name.toLowerCase().includes(q) ||
-      (p.phone && p.phone.includes(q))
-    );
-
+    return p.student_name.toLowerCase().includes(search.toLowerCase());
   });
-
-  /* ================= OPEN DETAILS ================= */
-
-  const openDetails = async (payment: PaymentTransaction) => {
-
-    if (!token) return;
-
-    try {
-
-      const res = await fetch(
-        `${API}/api/payments/history/${payment.membership_id}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-
-      if (!res.ok) {
-
-        setHistory([]);
-        setSelected(payment);
-        return;
-
-      }
-
-      const historyData = await res.json();
-
-      setHistory(Array.isArray(historyData) ? historyData : []);
-      setSelected(payment);
-
-    } catch (err) {
-
-      console.error(err);
-      setHistory([]);
-      setSelected(payment);
-
-    }
-
-  };
 
   /* ================= UI ================= */
 
   return (
     <div className="payments-page">
-
-      <h2>Payments (Pending Approvals)</h2>
+      <h2>All Payments</h2>
 
       {/* SEARCH */}
-
       <div className="search-filter-row">
-
         <input
           type="text"
           className="payment-search"
@@ -141,69 +88,52 @@ const Payments = () => {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
-
       </div>
 
-      {/* EMPTY STATE */}
-
+      {/* EMPTY */}
       {filtered.length === 0 && (
-        <p className="muted">No pending payments</p>
+        <p className="muted">No payments found</p>
       )}
 
-      {/* PAYMENT LIST */}
-
+      {/* LIST */}
       {filtered.map((p) => (
-
-        <div key={p.transaction_id} className="payment-card pending">
-
+        <div key={p.id} className="payment-card">
           <div className="payment-header">
-
             <strong>{p.student_name}</strong>
 
-            <span className="badge pending">
-              PENDING
+            <span className={`badge ${p.status.toLowerCase()}`}>
+              {p.status === "PENDING" && "Pending"}
+              {p.status === "APPROVED" && "Approved"}
+              {p.status === "REJECTED" && "Rejected"}
+              {p.status === "CANCELLED" && "Cancelled"}
             </span>
-
           </div>
 
           <div className="payment-body">
-
             <p>Amount: ₹{p.amount}</p>
-
             <p className="muted">
-              Submitted: {new Date(p.submitted_at).toLocaleString()}
+              {new Date(p.created_at).toLocaleString()}
             </p>
-
           </div>
 
           <div className="payment-actions">
-
-            <button onClick={() => openDetails(p)}>
+            <button onClick={() => setSelected(p)}>
               View Details
             </button>
-
           </div>
-
         </div>
-
       ))}
 
-      {/* DETAILS MODAL */}
-
+      {/* MODAL */}
       {selected && (
-
-        <PaymentInfoModal
-          payment={selected}
-          history={history}
-          isAdmin={true}
-          onClose={() => setSelected(null)}
-        />
-
-      )}
-
+  <PaymentModalSimple
+    role="admin"
+    payment={selected}
+    onClose={() => setSelected(null)}
+  />
+)}
     </div>
   );
-
 };
 
 export default Payments;

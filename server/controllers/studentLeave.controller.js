@@ -126,3 +126,28 @@ WHERE user_id = ? AND status = 'RETURN_REQUESTED'
     }
   );
 };
+
+
+exports.getLeaveStats = (req, res) => {
+  const adminId = req.user.id;
+
+  db.query(
+    `
+    SELECT COUNT(*) AS active_leaves
+    FROM student_leaves sl
+    JOIN student_mess_membership smm ON sl.user_id = smm.user_id
+    JOIN messes m ON smm.mess_id = m.id
+    WHERE m.owner_user_id = ?
+      AND sl.status IN ('PENDING', 'APPROVED', 'RETURN_REQUESTED')
+    `,
+    [adminId],
+    (err, rows) => {
+      if (err) {
+        console.error("Leave stats error:", err);
+        return res.status(500).json({ message: "DB error" });
+      }
+
+      res.json(rows[0] || { active_leaves: 0 });
+    }
+  );
+};

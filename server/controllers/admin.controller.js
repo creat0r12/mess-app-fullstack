@@ -233,9 +233,7 @@ exports.rejectStudent = (req, res) => {
 /* =========================
    ACTIVE STUDENTS
 ========================= */
-/* =========================
-   ACTIVE STUDENTS
-========================= */
+
 exports.getActiveStudents = (req, res) => {
   const messId = req.user.mess_id;
 
@@ -300,36 +298,44 @@ exports.getDashboardStats = (req, res) => {
     return res.status(403).json({ message: "Mess not linked to admin" });
   }
 
-  const stats = {};
-
   db.query(
-    `
-    SELECT COUNT(DISTINCT user_id) AS pending
-    FROM student_mess_membership
-    WHERE status='PENDING' AND mess_id = ?
-    `,
+  `
+  SELECT 
+    user_id,
+    MAX(
+      CASE 
+        WHEN status = 'PENDING' THEN 2
+        WHEN status = 'ACTIVE' THEN 1
+        ELSE 0
+      END
+    ) AS priority
+  FROM student_mess_membership
+  WHERE mess_id = ?
+    AND status IN ('PENDING', 'ACTIVE')   -- 🔥 FIX
+  GROUP BY user_id
+  `,
     [messId],
-    (err, p) => {
-      if (err) return res.status(500).json({ message: "DB error" });
+    (err, rows) => {
+      if (err) {
+        console.error("Dashboard stats error:", err);
+        return res.status(500).json({ message: "DB error" });
+      }
 
-      stats.pending = p[0].pending;
+      let pending = 0;
+      let active = 0;
 
-      db.query(
-        `
-        SELECT COUNT(DISTINCT user_id) AS active
-        FROM student_mess_membership
-        WHERE status='ACTIVE' AND mess_id = ?
-        `,
-        [messId],
-        (err2, a) => {
-          if (err2) return res.status(500).json({ message: "DB error" });
+      rows.forEach((r) => {
+        if (r.priority === 2) pending++;
+        else if (r.priority === 1) active++;
+      });
 
-          stats.active = a[0].active;
-          stats.total = stats.pending + stats.active;
+      const stats = {
+        pending,
+        active,
+        total: rows.length,
+      };
 
-          res.json(stats);
-        }
-      );
+      res.json(stats);
     }
   );
 };

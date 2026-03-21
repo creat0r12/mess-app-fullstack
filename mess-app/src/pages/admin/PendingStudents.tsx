@@ -64,9 +64,9 @@ const PendingStudents = () => {
      APPROVE / REJECT
   ========================= */
   const handleAction = async (
-    membershipId: number,
-    action: "approve" | "reject"
-  ) => {
+  userId: number,
+  action: "approve" | "reject"
+)=> {
     const ok = window.confirm(
       `Are you sure you want to ${action} this student?`
     );
@@ -77,29 +77,28 @@ const PendingStudents = () => {
         ? "approve-student"
         : "reject-student";
 
-    try {
-      const res = await fetch(
-        `${API_ROOT}/api/admin/${endpoint}/${membershipId}`,
-        {
-          method: "PUT",
-          headers: {
-            Authorization: `Bearer ${getToken()}`,
-          },
-        }
-      );
-
-      if (!res.ok) {
-        console.error("Action failed");
-        return;
-      }
-
-      // Refresh list after action
-      fetchPending();
-    } catch (err) {
-      console.error("Failed to perform action", err);
+   try {
+  const res = await fetch(
+    `${API_ROOT}/api/admin/${endpoint}/${userId}`,  // ✅ comma added
+    {
+      method: "PUT",
+      headers: {
+        Authorization: `Bearer ${getToken()}`,
+      },
     }
-  };
+  );
 
+  if (!res.ok) {
+    console.error("Action failed");
+    return;
+  }
+
+  // Refresh list after action
+  fetchPending();
+} catch (err) {
+  console.error("Failed to perform action", err);
+}
+};
 
   // 🔹 GROUP LUNCH + DINNER REQUESTS
   const groupedStudents = Object.values(
@@ -162,9 +161,7 @@ const PendingStudents = () => {
               <button
                 className="btn approve"
                 onClick={() =>
-                  s.membership_ids.forEach((id: number) =>
-                    handleAction(id, "approve")
-                  )
+                  handleAction(s.user_id, "approve")
                 }
 
               >
@@ -174,7 +171,7 @@ const PendingStudents = () => {
               <button
                 className="btn reject"
                 onClick={() =>
-                  handleAction(s.membership_id, "reject")
+                  handleAction(s.user_id, "reject")
                 }
               >
                 Reject

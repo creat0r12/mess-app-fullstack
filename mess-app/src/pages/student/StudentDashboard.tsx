@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import "../../styles/studentDashboard.css";
-import StudentPaymentPopup from "../../components/common/StudentPaymentPopup";
-
+import PaymentModalSimple from "../../components/common/payment/PaymentModalSimple";
 const API = "http://localhost:5000";
 
 const StudentDashboard = () => {
@@ -20,7 +19,6 @@ const StudentDashboard = () => {
   const [leaveLoading, setLeaveLoading] = useState(false);
 
 
-  const [myPayments, setMyPayments] = useState<any[]>([]);
 
 
   const hasLeaveRequest =
@@ -132,15 +130,7 @@ const StudentDashboard = () => {
   };
 
 
-  useEffect(() => {
-  if (!token) return;
 
-  fetch(`${API}/api/payments/simple/my`, {
-    headers: { Authorization: `Bearer ${token}` },
-  })
-    .then((res) => res.json())
-    .then((data) => setMyPayments(data || []));
-}, [token]);
 
   if (loading) return <p>Loading...</p>;
   if (!student) return <p>Please login again</p>;
@@ -159,40 +149,9 @@ const StudentDashboard = () => {
   >
     Make Payment
   </button>
-
-  {myPayments.map((p: any) => (
-    <div key={p.id} style={{ marginTop: "12px" }}>
-      <p><strong>Amount:</strong> ₹{p.amount}</p>
-      <p><strong>Status:</strong> {p.status}</p>
-
-      <img
-        src={`${API}${p.proof_url}`}
-        style={{ width: "100%", borderRadius: "8px" }}
-      />
-
-      {p.status === "PENDING" && (
-        <button
-          className="danger-btn"
-          onClick={async () => {
-            await fetch(`${API}/api/payments/simple/cancel/${p.id}`, {
-              method: "PUT",
-              headers: { Authorization: `Bearer ${token}` },
-            });
-
-            // update UI instantly
-            setMyPayments((prev) =>
-              prev.map((x) =>
-                x.id === p.id ? { ...x, status: "REJECTED" } : x
-              )
-            );
-          }}
-        >
-          Cancel Payment
-        </button>
-      )}
-    </div>
-  ))}
 </div>
+
+  
 
       {/* 🍽️ MESS INFO + MENU */}
       <div className="card">
@@ -320,11 +279,11 @@ const StudentDashboard = () => {
 
       {/* 💳 PAYMENT POPUP */}
       {showPaymentPopup && (
-        <StudentPaymentPopup
-          mess_id={student?.mess_id || 1}
-          onClose={() => setShowPaymentPopup(false)}
-        />
-      )}
+  <PaymentModalSimple
+    role="student"
+    onClose={() => setShowPaymentPopup(false)}
+  />
+)}
     </div>
   );
 };

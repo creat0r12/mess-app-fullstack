@@ -20,51 +20,52 @@ const StudentLeaveRequests = () => {
   const [loading, setLoading] = useState(true);
 
   const fetchLeaves = async () => {
-    try {
-      const res = await axios.get(
-        `${API}/api/admin/student-leaves`, // ✅ ALL STATUSES
-        { headers }
-      );
-      setLeaves(Array.isArray(res.data) ? res.data : []);
-    } catch (err) {
-      console.error("Failed to load leaves", err);
-    } finally {
-      setLoading(false);
-    }
-  };
+  setLoading(true); // ✅ ADD THIS LINE
 
+  try {
+    const res = await axios.get(
+      `${API}/api/admin/student-leaves`,
+      { headers }
+    );
+    setLeaves(Array.isArray(res.data) ? res.data : []);
+  } catch (err) {
+    console.error("Failed to load leaves", err);
+  } finally {
+    setLoading(false);
+  }
+};
   useEffect(() => {
-    fetchLeaves();
-  }, []);
+    if (token) fetchLeaves();
+  }, [token]);
 
   /* ================= ACTIONS ================= */
 
   const handleApprove = async (id: number) => {
-    await axios.put(
-      `${API}/api/admin/student-leaves/${id}/approve`,
-      {},
-      { headers }
-    );
-    fetchLeaves();
+    try {
+      await axios.put(`${API}/api/admin/student-leaves/${id}/approve`, {}, { headers });
+      fetchLeaves();
+    } catch (err) {
+      console.error("Approve failed", err);
+    }
   };
 
   const handleReject = async (id: number) => {
-    await axios.put(
-      `${API}/api/admin/student-leaves/${id}/reject`,
-      {},
-      { headers }
-    );
+  try {
+    await axios.put(`${API}/api/admin/student-leaves/${id}/reject`, {}, { headers });
     fetchLeaves();
-  };
+  } catch (err) {
+    console.error("Reject failed", err);
+  }
+};
 
   const handleRequestReturn = async (id: number) => {
-    await axios.put(
-      `${API}/api/admin/student-leaves/${id}/request-return`,
-      {},
-      { headers }
-    );
+  try {
+    await axios.put(`${API}/api/admin/student-leaves/${id}/request-return`, {}, { headers });
     fetchLeaves();
-  };
+  } catch (err) {
+    console.error("Return request failed", err);
+  }
+};
 
   return (
     <div className="student-leave-page">
@@ -89,7 +90,10 @@ const StudentLeaveRequests = () => {
             <p>
               <strong>Status:</strong>{" "}
               <span className={`leave-status ${leave.status.toLowerCase()}`}>
-                {leave.status}
+                {leave.status === "PENDING" && "Pending"}
+                {leave.status === "APPROVED" && "Approved"}
+                {leave.status === "REJECTED" && "Rejected"}
+                {leave.status === "RETURN_REQUESTED" && "Return Requested"}
               </span>
             </p>
           </div>

@@ -1,5 +1,5 @@
 const express = require("express");
-
+const controller = require("../controllers/studentLeave.controller");
 const {
   getStudentLeaves,
   approveLeave,
@@ -24,5 +24,6 @@ router.put(
   adminAuth,
   requestReturn
 );
+router.get("/student-leaves/stats", adminAuth, controller.getLeaveStats);
 
 module.exports = router;

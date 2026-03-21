@@ -5,7 +5,7 @@ const { adminAuth, studentAuth } = require("../middlewares/auth.middleware");
 const upload = require("../middlewares/uploadPayment");
 
 /* =========================
-   STUDENT: SUBMIT PAYMENT
+   STUDENT: SUBMIT PAYMENT (ADVANCED)
 ========================= */
 router.post(
   "/submit/:paymentId",
@@ -35,9 +35,9 @@ router.put(
 );
 
 /* =========================
-   DASHBOARD STATS (ADMIN)
+   DASHBOARD STATS (ADMIN) ✅ FIXED
 ========================= */
-router.get("/recent", adminAuth, controller.getRecentPayments);
+router.get("/recent", adminAuth, controller.getRecentSimplePayments); // ✅ CHANGED
 router.get("/total", adminAuth, controller.getTotalCollection);
 
 /* =========================
@@ -48,7 +48,11 @@ router.get("/history", studentAuth, controller.getMyPaymentHistory);
 /* =========================
    PAYMENT HISTORY (ADMIN)
 ========================= */
-router.get("/history/:membershipId", adminAuth, controller.getStudentPaymentHistory);
+router.get(
+  "/history/:membershipId",
+  adminAuth,
+  controller.getStudentPaymentHistory
+);
 
 /* =========================
    STUDENT: CURRENT PAYMENT
@@ -60,7 +64,7 @@ router.get(
 );
 
 /* =========================
-   STUDENT: PAYMENT SETTINGS (QR / UPI)
+   STUDENT: PAYMENT SETTINGS
 ========================= */
 router.get(
   "/settings",
@@ -68,11 +72,11 @@ router.get(
   controller.getPaymentSettings
 );
 
-router.put(
-  "/cancel",
-  studentAuth,
-  controller.cancelPendingPayment
-);
+// router.put(
+//   "/cancel",
+//   studentAuth,
+//   controller.cancelPendingPayment
+// );
 
 router.get(
   "/transactions/pending",
@@ -80,12 +84,16 @@ router.get(
   controller.getPendingTransactions
 );
 
-
+/* =========================
+   ADMIN: ALL PAYMENTS (ADVANCED)
+========================= */
 router.get("/all", adminAuth, controller.getAllPayments);
 
+/* =========================
+   SIMPLE PAYMENT SYSTEM
+========================= */
 
-// SIMPLE PAYMENT SYSTEM
-
+// Upload payment
 router.post(
   "/simple/upload",
   studentAuth,
@@ -93,22 +101,32 @@ router.post(
   controller.uploadSimplePayment
 );
 
+// Admin view all simple payments
 router.get(
   "/simple",
   adminAuth,
   controller.getSimplePayments
 );
 
+// Accept / Reject simple payment
 router.put(
   "/simple/:id",
   adminAuth,
   controller.updateSimplePayment
 );
 
+// Student own payments
 router.get(
   "/simple/my",
   studentAuth,
   controller.getMySimplePayments
+);
+
+// Cancel simple payment
+router.put(
+  "/simple/cancel/:id",
+  studentAuth,
+  controller.cancelSimplePayment
 );
 
 module.exports = router;
