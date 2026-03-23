@@ -106,3 +106,8 @@ body.dark button {
 body.dark .container {
   background: #111;   /* remove image */
 }
+
+
+body {
+  margin: 0; /* 🔥 VERY IMPORTANT */
+}

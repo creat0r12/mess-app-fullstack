@@ -1,185 +1,231 @@
-/* ================= OVERLAY ================= */
+/* =========================
+   MODAL BASE
+========================= */
+
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.45);
+  background: rgba(0, 0, 0, 0.35);
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 1000;
+  z-index: 999;
 }
 
-/* ================= MODAL CARD ================= */
 .modal-card {
-  background: #ffffff;
   width: 95%;
   max-width: 420px;
+  background: #fff;
+  border-radius: 20px;
+  overflow: hidden;
 
-  /* 🔑 key for scroll */
-  max-height: 90vh;
   display: flex;
   flex-direction: column;
 
-  border-radius: 12px;
-  padding: 16px;
-  box-sizing: border-box;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
 }
 
-/* ================= HEADER ================= */
+/* =========================
+   HEADER
+========================= */
+
 .modal-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  flex-shrink: 0;
+
+  padding: 16px 18px;
+  border-bottom: 1px solid #eee;
 }
 
 .modal-header h3 {
   font-size: 18px;
-  margin: 0;
+  font-weight: 600;
 }
 
 .close-btn {
+  background: #f1f5f9;
   border: none;
-  background: none;
-  font-size: 18px;
+  border-radius: 8px;
+  padding: 6px 10px;
   cursor: pointer;
 }
 
-/* ================= BODY (SCROLLABLE, HIDDEN BAR) ================= */
+/* =========================
+   BODY
+========================= */
+
 .modal-body {
-  flex: 1;
+  padding: 16px;
   overflow-y: auto;
-  padding-right: 6px;
-
-  /* hide scrollbar */
-  scrollbar-width: none;       /* Firefox */
-  -ms-overflow-style: none;    /* IE/Edge */
 }
 
-.modal-body::-webkit-scrollbar {
-  display: none;               /* Chrome/Safari */
-}
-
-/* ================= TEXT ================= */
 .modal-sub {
   font-size: 13px;
-  color: #6b7280;
-  margin: 8px 0 14px;
+  color: #666;
+  margin-bottom: 12px;
 }
 
-/* ================= AMOUNT SECTION ================= */
+/* =========================
+   PRICE GRID
+========================= */
+
 .amount-section {
   background: #f9fafb;
-  padding: 12px;
-  border-radius: 8px;
+  border-radius: 14px;
+  padding: 14px;
   margin-bottom: 14px;
 }
 
 .amount-section h4 {
   font-size: 14px;
-  margin-bottom: 8px;
+  margin-bottom: 10px;
 }
 
-.amount-row {
-  display: flex;
-  justify-content: space-between;
+.price-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 10px;
   align-items: center;
-  margin-top: 8px;
 }
 
-.amount-row label {
-  font-size: 14px;
+.grid-header {
+  font-size: 13px;
+  font-weight: 600;
+  text-align: center;
+  color: #333;
 }
 
-.amount-row input {
-  width: 120px;
-  padding: 7px 8px;
-  border-radius: 6px;
-  border: 1px solid #d1d5db;
-  text-align: right;
-  font-size: 14px;
+.price-grid div {
+  font-size: 13px;
+  text-align: center;
 }
 
-/* ================= TOGGLE ================= */
+.price-grid input {
+  width: 100%;
+  padding: 8px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  text-align: center;
+  font-size: 13px;
+}
+
+/* =========================
+   TOGGLES
+========================= */
+
 .toggle-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin: 14px 0;
+  font-size: 14px;
 }
 
-/* ================= QR SECTION ================= */
+.switch {
+  position: relative;
+  width: 42px;
+  height: 22px;
+}
+
+.switch input {
+  display: none;
+}
+
+.slider {
+  position: absolute;
+  inset: 0;
+  background: #ddd;
+  border-radius: 20px;
+  transition: 0.3s;
+}
+
+.slider::before {
+  content: "";
+  position: absolute;
+  height: 18px;
+  width: 18px;
+  left: 2px;
+  top: 2px;
+  background: white;
+  border-radius: 50%;
+  transition: 0.3s;
+}
+
+.switch input:checked + .slider {
+  background: #22c55e;
+}
+
+.switch input:checked + .slider::before {
+  transform: translateX(20px);
+}
+
+/* =========================
+   QR SECTION
+========================= */
+
 .qr-section {
-  margin-bottom: 14px;
+  margin-top: 10px;
 }
 
 .field-label {
   font-size: 13px;
-  margin-bottom: 4px;
+  margin-bottom: 6px;
   display: block;
 }
 
 .text-input {
   width: 100%;
   padding: 8px;
-  border-radius: 6px;
-  border: 1px solid #d1d5db;
-  font-size: 14px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  margin-bottom: 10px;
 }
 
-/* QR IMAGE */
 .qr-preview-wrap {
-  margin: 10px 0;
-  max-height: 180px;
-  overflow: hidden;
-  border-radius: 8px;
+  display: flex;
+  justify-content: center;
+  margin-bottom: 10px;
 }
 
 .qr-preview {
-  width: 100%;
-  max-height: 180px;
-  object-fit: contain;
-  border-radius: 8px;
+  width: 120px;
+  border-radius: 10px;
 }
 
 .qr-placeholder {
-  height: 120px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 13px;
-  color: #6b7280;
-  background: #f3f4f6;
-  border-radius: 8px;
+  font-size: 12px;
+  color: #777;
 }
 
 .file-label {
   font-size: 13px;
   color: #2563eb;
   cursor: pointer;
-  display: inline-block;
 }
 
-/* ================= ACTIONS (STICKY BOTTOM) ================= */
+/* =========================
+   ACTIONS
+========================= */
+
 .modal-actions {
   display: flex;
   gap: 10px;
-  margin-top: 12px;
-  flex-shrink: 0;
+  padding: 14px;
+  border-top: 1px solid #eee;
 }
 
 .btn {
   flex: 1;
   padding: 10px;
-  border-radius: 8px;
+  border-radius: 10px;
+  border: none;
   font-weight: 600;
   cursor: pointer;
-  border: none;
-  font-size: 14px;
 }
 
 .btn.primary {
-  background: #16a34a;
+  background: linear-gradient(135deg, #22c55e, #16a34a);
   color: white;
 }
 

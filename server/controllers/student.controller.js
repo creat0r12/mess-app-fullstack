@@ -326,8 +326,8 @@ exports.requestMessJoin = (req, res) => {
       if (users.length === 0) {
         db.query(
           `
-          INSERT INTO users (name, phone, email, role)
-          VALUES (?, ?, ?, 'STUDENT')
+          INSERT INTO users (name, phone, email, role, status)
+          VALUES (?, ?, ?, 'STUDENT', 'PENDING')
           `,
           [name, phone, email || null],
           (err3, result) => {

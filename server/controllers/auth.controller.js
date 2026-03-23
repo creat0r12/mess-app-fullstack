@@ -2,136 +2,6 @@ const db = require("../db");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
-/* =========================
-   MESS ADMIN LOGIN (FINAL - CALLBACK SAFE)
-========================= */
-exports.loginAdmin = (req, res) => {
-  const { identifier, password } = req.body;
-
-  if (!identifier || !password) {
-    return res.status(400).json({ message: "Missing credentials" });
-  }
-
-  const sql = `
-    SELECT 
-      u.id,
-      u.name,
-      u.phone,
-      u.email,
-      u.password,
-      u.role,
-      m.id AS mess_id
-    FROM users u
-    LEFT JOIN messes m ON m.owner_user_id = u.id
-    WHERE u.role = 'MESS_ADMIN'
-      AND (u.email = ? OR u.phone = ?)
-    LIMIT 1
-  `;
-
-  db.query(sql, [identifier, identifier], async (err, results) => {
-    if (err) {
-      console.error("MESS ADMIN LOGIN ERROR:", err);
-      return res.status(500).json({ message: "DB error" });
-    }
-
-    if (!results || results.length === 0) {
-      return res.status(401).json({ message: "Invalid credentials" });
-    }
-
-    const admin = results[0];
-
-    const isMatch = await bcrypt.compare(password, admin.password);
-    if (!isMatch) {
-      return res.status(401).json({ message: "Invalid credentials" });
-    }
-
-    const token = jwt.sign(
-      {
-        id: admin.id,
-        role: admin.role,
-        mess_id: admin.mess_id,
-      },
-      process.env.JWT_SECRET,
-      { expiresIn: "7d" }
-    );
-
-    res.json({
-      token,
-      role: admin.role,
-      mess_id: admin.mess_id,
-    });
-  });
-};
-
-
-
-/* =========================
-   STUDENT LOGIN
-========================= */
-exports.studentLogin = async (req, res) => {
-  const { identifier, password } = req.body;
-
-  if (!identifier || !password) {
-    return res.status(400).json({
-      message: "Phone/Name and password are required",
-    });
-  }
-
-  const sql = `
-    SELECT *
-    FROM users
-    WHERE role = 'STUDENT'
-      AND status = 'ACTIVE'
-      AND (phone = ? OR name = ?)
-    LIMIT 1
-  `;
-
-  db.query(sql, [identifier, identifier], async (err, results) => {
-    if (err) {
-      console.error("STUDENT LOGIN ERROR:", err);
-      return res.status(500).json({ message: "DB error" });
-    }
-
-    if (results.length === 0) {
-      return res.status(401).json({
-        message: "Invalid credentials",
-      });
-    }
-
-    const user = results[0];
-
-    if (!user.password) {
-      return res.json({
-        firstLogin: true,
-        phone: user.phone,
-      });
-    }
-
-    const isMatch = await bcrypt.compare(password, user.password);
-
-    if (!isMatch) {
-      return res.status(401).json({
-        message: "Invalid credentials",
-      });
-    }
-
-    const token = jwt.sign(
-      {
-        id: user.id,
-        role: user.role,
-      },
-      process.env.JWT_SECRET,
-      { expiresIn: "7d" }
-    );
-
-    res.json({
-      token,
-      role: user.role,
-    });
-  });
-};
-
-
 
 /* =========================
    SET STUDENT PASSWORD
@@ -150,7 +20,7 @@ exports.setStudentPassword = async (req, res) => {
   }
 
   db.query(
-    "SELECT id, status, password FROM students WHERE phone = ?",
+    "SELECT id, status, password FROM users WHERE phone = ?",
     [phone],
     async (err, results) => {
       if (err) return res.status(500).json({ message: "DB error" });
@@ -176,7 +46,7 @@ exports.setStudentPassword = async (req, res) => {
       const hashed = await bcrypt.hash(password, 10);
 
       db.query(
-        "UPDATE students SET password = ? WHERE id = ?",
+        "UPDATE users SET password = ? WHERE id = ?",
         [hashed, student.id],
         (err2) => {
           if (err2) {
@@ -241,6 +111,115 @@ exports.platformLogin = (req, res) => {
     res.json({
       token,
       role: user.role,
+    });
+  });
+};
+
+
+
+
+/* =========================
+   UNIFIED LOGIN (STUDENT + ADMIN)
+========================= */
+exports.loginUser = (req, res) => {
+  const { identifier, password } = req.body;
+
+  if (!identifier) {
+    return res.status(400).json({
+      message: "Phone or Email is required",
+    });
+  }
+
+  const sql = `
+  SELECT 
+    u.id,
+    u.name,
+    u.phone,
+    u.email,
+    u.password,
+    u.role,
+    u.status,
+    m.id AS mess_id
+  FROM users u
+  LEFT JOIN messes m ON m.owner_user_id = u.id
+  WHERE (u.email = ? OR u.phone = ?)
+  LIMIT 1
+`;
+
+  db.query(sql, [identifier, identifier], async (err, results) => {
+    if (err) {
+      console.error("LOGIN ERROR:", err);
+      return res.status(500).json({ message: "DB error" });
+    }
+
+    if (!results || results.length === 0) {
+      return res.status(404).json({
+        message: "User not found. Contact your mess admin.",
+      });
+    }
+
+    const user = results[0];
+
+
+
+    /* =========================
+   FIRST TIME LOGIN (NO PASSWORD)
+========================= */
+    if (!user.password) {
+      // ✅ Only block STUDENTS
+      if (user.role === "STUDENT" && user.status !== "ACTIVE") {
+        return res.status(403).json({
+          message: "You are not approved by any mess yet",
+        });
+      }
+
+      return res.json({
+        firstLogin: true,
+        phone: user.phone,
+      });
+    }
+
+    /* =========================
+       PASSWORD REQUIRED
+    ========================= */
+    if (!password) {
+      // ✅ Only block STUDENTS
+      if (user.role === "STUDENT" && user.status !== "ACTIVE") {
+        return res.status(403).json({
+          message: "You are not approved by any mess yet",
+        });
+      }
+
+      return res.json({
+        firstLogin: false,
+      });
+    }
+
+    const isMatch = await bcrypt.compare(password, user.password);
+
+    if (!isMatch) {
+      return res.status(401).json({
+        message: "Invalid credentials",
+      });
+    }
+
+    /* =========================
+       GENERATE TOKEN
+    ========================= */
+    const token = jwt.sign(
+      {
+        id: user.id,
+        role: user.role,
+        mess_id: user.mess_id || null,
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: "7d" }
+    );
+
+    return res.json({
+      token,
+      role: user.role,
+      mess_id: user.mess_id || null,
     });
   });
 };

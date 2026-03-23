@@ -1,4 +1,5 @@
 // src/components/common/PaymentSettingsModal.tsx
+
 import { useEffect, useState } from "react";
 import "../../styles/paymentSettingsModal.css";
 
@@ -13,8 +14,10 @@ type SettingsIn = {
   qr_image?: string | null;
 
   // ✅ NEW
-  boys_monthly_amount?: number;
-  girls_monthly_amount?: number;
+  boys_one_time?: number;
+  boys_two_time?: number;
+  girls_one_time?: number;
+  girls_two_time?: number;
 };
 
 type Props = {
@@ -26,8 +29,10 @@ type Props = {
     qrFile?: File | null;
 
     // ✅ NEW
-    boys_monthly_amount: number;
-    girls_monthly_amount: number;
+    boys_one_time: number;
+    boys_two_time: number;
+    girls_one_time: number;
+    girls_two_time: number;
   }) => void;
   onClose: () => void;
 };
@@ -39,12 +44,10 @@ const PaymentSettingsModal = ({ settings, onSave, onClose }: Props) => {
   const [qrFile, setQrFile] = useState<File | null>(null);
 
   // ✅ NEW STATES
-  const [boysAmount, setBoysAmount] = useState(
-    settings.boys_monthly_amount || 0
-  );
-  const [girlsAmount, setGirlsAmount] = useState(
-    settings.girls_monthly_amount || 0
-  );
+  const [boysOne, setBoysOne] = useState(settings.boys_one_time || 0);
+  const [boysTwo, setBoysTwo] = useState(settings.boys_two_time || 0);
+  const [girlsOne, setGirlsOne] = useState(settings.girls_one_time || 0);
+  const [girlsTwo, setGirlsTwo] = useState(settings.girls_two_time || 0);
 
   const [preview, setPreview] = useState<string | null>(
     settings.qr_image
@@ -68,44 +71,61 @@ const PaymentSettingsModal = ({ settings, onSave, onClose }: Props) => {
   return (
     <div className="modal-overlay">
       <div className="modal-card">
+
         {/* HEADER */}
         <div className="modal-header">
           <h3>Payment Settings</h3>
-          <button className="close-btn" onClick={onClose}>
-            ✕
-          </button>
+          <button className="close-btn" onClick={onClose}>✕</button>
         </div>
 
-        {/* 🔽 SCROLLABLE CONTENT */}
+        {/* BODY */}
         <div className="modal-body">
+
           <p className="modal-sub">
-            Control how students can pay their mess fees
+            Set pricing for your mess (per meal type)
           </p>
 
-          {/* MONTHLY AMOUNT */}
+          {/* 🔥 NEW GRID PRICING */}
           <div className="amount-section">
-            <h4>Monthly Mess Charges</h4>
+            <h4>Mess Charges</h4>
 
-            <div className="amount-row">
-              <label>👦 Boys</label>
+            <div className="price-grid">
+
+              {/* HEADER */}
+              <div className="grid-header">Type</div>
+              <div className="grid-header">Girls</div>
+              <div className="grid-header">Boys</div>
+
+              {/* 1 TIME */}
+              <div>1 Time</div>
               <input
                 type="number"
-                value={boysAmount}
-                onChange={(e) => setBoysAmount(Number(e.target.value))}
+                value={girlsOne}
+                onChange={(e) => setGirlsOne(Number(e.target.value))}
               />
-            </div>
-
-            <div className="amount-row">
-              <label>👧 Girls</label>
               <input
                 type="number"
-                value={girlsAmount}
-                onChange={(e) => setGirlsAmount(Number(e.target.value))}
+                value={boysOne}
+                onChange={(e) => setBoysOne(Number(e.target.value))}
               />
+
+              {/* 2 TIME */}
+              <div>2 Time</div>
+              <input
+                type="number"
+                value={girlsTwo}
+                onChange={(e) => setGirlsTwo(Number(e.target.value))}
+              />
+              <input
+                type="number"
+                value={boysTwo}
+                onChange={(e) => setBoysTwo(Number(e.target.value))}
+              />
+
             </div>
           </div>
 
-          {/* UPI / QR TOGGLE */}
+          {/* UPI */}
           <div className="toggle-row">
             <span>Enable UPI / QR Payment</span>
             <label className="switch">
@@ -130,11 +150,7 @@ const PaymentSettingsModal = ({ settings, onSave, onClose }: Props) => {
 
               <div className="qr-preview-wrap">
                 {preview ? (
-                  <img
-                    src={preview}
-                    alt="QR Preview"
-                    className="qr-preview"
-                  />
+                  <img src={preview} alt="QR" className="qr-preview" />
                 ) : (
                   <div className="qr-placeholder">No QR uploaded</div>
                 )}
@@ -154,7 +170,7 @@ const PaymentSettingsModal = ({ settings, onSave, onClose }: Props) => {
             </div>
           )}
 
-          {/* CASH TOGGLE */}
+          {/* CASH */}
           <div className="toggle-row">
             <span>Enable Cash Payment</span>
             <label className="switch">
@@ -166,9 +182,10 @@ const PaymentSettingsModal = ({ settings, onSave, onClose }: Props) => {
               <span className="slider" />
             </label>
           </div>
+
         </div>
 
-        {/* ACTIONS (STICKY BOTTOM) */}
+        {/* ACTIONS */}
         <div className="modal-actions">
           <button
             className="btn primary"
@@ -178,8 +195,12 @@ const PaymentSettingsModal = ({ settings, onSave, onClose }: Props) => {
                 cash_enabled: cashEnabled ? 1 : 0,
                 upi_id: upiId || null,
                 qrFile,
-                boys_monthly_amount: boysAmount,
-                girls_monthly_amount: girlsAmount,
+
+                // ✅ NEW DATA
+                boys_one_time: boysOne,
+                boys_two_time: boysTwo,
+                girls_one_time: girlsOne,
+                girls_two_time: girlsTwo,
               })
             }
           >
@@ -190,6 +211,7 @@ const PaymentSettingsModal = ({ settings, onSave, onClose }: Props) => {
             Cancel
           </button>
         </div>
+
       </div>
     </div>
   );

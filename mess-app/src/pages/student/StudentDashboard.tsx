@@ -28,12 +28,15 @@ const StudentDashboard = () => {
 
   /* ================= LOAD STUDENT ================= */
   useEffect(() => {
-    const stored = localStorage.getItem("student");
-    if (stored) {
-      setStudent(JSON.parse(stored));
+    if (!token) {
+      setLoading(false);
+      return;
     }
+
+    // we no longer depend on localStorage "student"
+    setStudent({}); // dummy just to allow dashboard
     setLoading(false);
-  }, []);
+  }, [token]);
 
   /* ================= LOAD MESS SETTINGS ================= */
   useEffect(() => {
@@ -141,17 +144,17 @@ const StudentDashboard = () => {
 
       {/* 💳 PAYMENT BLOCK */}
       <div className="card">
-  <h3>Your Payment</h3>
+        <h3>Your Payment</h3>
 
-  <button
-    className="pay-btn"
-    onClick={() => setShowPaymentPopup(true)}
-  >
-    Make Payment
-  </button>
-</div>
+        <button
+          className="pay-btn"
+          onClick={() => setShowPaymentPopup(true)}
+        >
+          Make Payment
+        </button>
+      </div>
 
-  
+
 
       {/* 🍽️ MESS INFO + MENU */}
       <div className="card">
@@ -279,11 +282,11 @@ const StudentDashboard = () => {
 
       {/* 💳 PAYMENT POPUP */}
       {showPaymentPopup && (
-  <PaymentModalSimple
-    role="student"
-    onClose={() => setShowPaymentPopup(false)}
-  />
-)}
+        <PaymentModalSimple
+          role="student"
+          onClose={() => setShowPaymentPopup(false)}
+        />
+      )}
     </div>
   );
 };

@@ -1,6 +1,7 @@
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useEffect, useState, useRef } from "react";
 import "../styles/navbar.css";
+import logo from "../assets/logo.png";
 
 const Navbar = () => {
   const navigate = useNavigate();
@@ -43,25 +44,19 @@ const Navbar = () => {
   return (
     <nav className="navbar">
       <div
-        className="navbar-title"
+        className="navbar-brand"
         onClick={() => navigate("/")}
-        style={{ cursor: "pointer" }}
       >
-        Mess App
+        <img src={logo} alt="logo" className="navbar-logo" />
+        <span className="navbar-title">Mess App</span>
       </div>
 
       <div className="navbar-actions">
         {/* ================= NOT LOGGED IN ================= */}
         {!role && (
-          <>
-            <Link to="/student/request" className="navbar-btn">
-              Student Request
-            </Link>
-
-            <Link to="/admin/login" className="navbar-btn primary">
-              Admin Login
-            </Link>
-          </>
+          <Link to="/student/login" className="navbar-btn">
+            Login
+          </Link>
         )}
 
         {/* ================= LOGGED IN (ADMIN / STUDENT) ================= */}
@@ -95,7 +90,6 @@ const Navbar = () => {
                   <Link to="/student/dashboard">My Dashboard</Link>
                 )}
 
-                {/* ✅ ADD THIS */}
                 <Link to="/settings">Settings</Link>
 
                 <button className="logout-btn" onClick={handleLogout}>

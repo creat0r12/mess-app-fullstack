@@ -299,7 +299,7 @@ exports.getDashboardStats = (req, res) => {
   }
 
   db.query(
-  `
+    `
   SELECT 
     user_id,
     MAX(
@@ -345,10 +345,28 @@ exports.getDashboardStats = (req, res) => {
    PAYMENT SETTINGS
 ========================= */
 exports.getPaymentSettings = (req, res) => {
+  const messId = req.user.mess_id; // ✅ IMPORTANT
+
   db.query(
-    "SELECT * FROM payment_settings WHERE id=1",
+    "SELECT * FROM payment_settings WHERE mess_id = ?",
+    [messId],
     (err, rows) => {
       if (err) return res.status(500).json({ message: "DB error" });
+
+      // If no row → return empty defaults
+      if (!rows || rows.length === 0) {
+        return res.json({
+          upi_enabled: 0,
+          cash_enabled: 0,
+          upi_id: null,
+          qr_image: null,
+          boys_one_time: 0,
+          boys_two_time: 0,
+          girls_one_time: 0,
+          girls_two_time: 0,
+        });
+      }
+
       res.json(rows[0]);
     }
   );
@@ -362,49 +380,88 @@ exports.updatePaymentSettings = (req, res) => {
     upi_id,
     upi_enabled,
     cash_enabled,
-    boys_monthly_amount,
-    girls_monthly_amount,
+    boys_one_time,
+    boys_two_time,
+    girls_one_time,
+    girls_two_time,
   } = req.body;
 
+  const messId = req.user.mess_id;
   const qrImage = req.file ? req.file.filename : null;
 
+  // ✅ SAFE NUMBER FUNCTION (VERY IMPORTANT)
+  const safeNumber = (val) => {
+    const num = Number(val);
+    return isNaN(num) ? 0 : num;
+  };
+
+  // 🔥 Ensure row exists
   db.query(
-    `
-    UPDATE payment_settings
-    SET
-      upi_id = ?,
-      upi_enabled = ?,
-      cash_enabled = ?,
-      boys_monthly_amount = ?,
-      girls_monthly_amount = ?,
-      qr_image = COALESCE(?, qr_image)
-    WHERE id = 1
-    `,
-    [
-      upi_id || null,
-      Number(upi_enabled),
-      Number(cash_enabled),
-      Number(boys_monthly_amount),
-      Number(girls_monthly_amount),
-      qrImage,
-    ],
-    (err, result) => {
+    "SELECT id FROM payment_settings WHERE mess_id = ?",
+    [messId],
+    (err, rows) => {
       if (err) {
-        console.error("Payment settings error:", err);
-        return res
-          .status(500)
-          .json({ message: "Failed to save payment settings" });
+        console.error("Check error:", err);
+        return res.status(500).json({ message: "DB error" });
       }
 
-      if (result.affectedRows === 0) {
-        return res.status(400).json({ message: "Settings row not found" });
+      if (rows.length === 0) {
+        db.query(
+          "INSERT INTO payment_settings (mess_id) VALUES (?)",
+          [messId],
+          (err2) => {
+            if (err2) {
+              console.error("Insert error:", err2);
+              return res.status(500).json({ message: "Insert failed" });
+            }
+            updateSettings();
+          }
+        );
+      } else {
+        updateSettings();
       }
-
-      res.json({ message: "Payment settings updated successfully" });
     }
   );
-};
 
+  function updateSettings() {
+    db.query(
+      `
+      UPDATE payment_settings
+      SET
+        upi_id = ?,
+        upi_enabled = ?,
+        cash_enabled = ?,
+        boys_one_time = ?,
+        boys_two_time = ?,
+        girls_one_time = ?,
+        girls_two_time = ?,
+        qr_image = COALESCE(?, qr_image)
+      WHERE mess_id = ?
+      `,
+      [
+        upi_id || null,
+        Number(upi_enabled) || 0,
+        Number(cash_enabled) || 0,
+        safeNumber(boys_one_time),   // ✅ FIXED
+        safeNumber(boys_two_time),   // ✅ FIXED
+        safeNumber(girls_one_time),  // ✅ FIXED
+        safeNumber(girls_two_time),  // ✅ FIXED
+        qrImage,
+        messId,
+      ],
+      (err) => {
+        if (err) {
+          console.error("Update error:", err);
+          return res.status(500).json({
+            message: "Failed to save payment settings",
+          });
+        }
+
+        res.json({ message: "Payment settings updated successfully" });
+      }
+    );
+  }
+};
 
 
 
@@ -413,9 +470,17 @@ exports.updatePaymentSettings = (req, res) => {
    + CREATE MESS ADMIN USER
 ========================= */
 exports.createMessRequest = async (req, res) => {
-  const { name, phone, email, address, description, password } = req.body;
+  const {
+    owner_name,   // ✅ ADD THIS
+    name,         // mess name
+    phone,
+    email,
+    address,
+    description,
+    password
+  } = req.body;
 
-  if (!name || !phone || !address || !description || !password) {
+  if (!owner_name || !name || !phone || !address || !description || !password) {
     return res.status(400).json({ message: "Missing required fields" });
   }
 
@@ -447,7 +512,7 @@ exports.createMessRequest = async (req, res) => {
           VALUES
             (?, ?, ?, ?, 'MESS_ADMIN')
           `,
-          [name, phone, email || null, hashedPassword],
+          [owner_name, phone, email || null, hashedPassword],
           (err2, userResult) => {
             if (err2) {
               console.error("Create admin user error:", err2);
@@ -635,10 +700,32 @@ exports.rejectMessRequest = (req, res) => {
 exports.getActiveMesses = (req, res) => {
   db.query(
     `
-    SELECT id, name, phone, email, address, description
-    FROM messes
-    WHERE status = 'ACTIVE'
-    ORDER BY created_at DESC
+    SELECT 
+      m.id,
+      m.name,
+      m.phone,
+      m.email,
+      m.address,
+      m.description,
+      u.name AS owner_name,
+
+      
+      ps.boys_one_time,
+      ps.boys_two_time,
+      ps.girls_one_time,
+      ps.girls_two_time
+
+    FROM messes m
+
+    JOIN users u 
+      ON m.owner_user_id = u.id
+
+    LEFT JOIN payment_settings ps 
+      ON ps.mess_id = m.id   -- ✅ VERY IMPORTANT
+
+    WHERE m.status = 'ACTIVE'
+
+    ORDER BY m.created_at DESC
     `,
     (err, results) => {
       if (err) {

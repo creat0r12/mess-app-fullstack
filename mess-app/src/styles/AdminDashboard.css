@@ -1,246 +1,231 @@
-/* ===== PAGE ===== */
+/* =========================
+   BASE
+========================= */
+
 .admin-dashboard {
-  padding: 14px;
-  background: #f4f6f8;
+  padding: 20px;
+  background: #f8fafc;
   min-height: 100vh;
 }
 
 .title {
-  font-size: 18px;
-  font-weight: 600;
-  margin-bottom: 16px;
-}
-
-/* ===== SECTION SPACING ===== */
-.section {
-  margin-bottom: 16px;
-}
-
-/* ===== STATS ===== */
-.top-cards {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-  margin-bottom: 18px;
-}
-
-.mini-card {
-  background: #ffffff;
-  border-radius: 12px;
-  padding: 14px;
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
-}
-
-.mini-card p {
-  font-size: 12px;
-  color: #666;
-  margin-bottom: 4px;
-}
-
-.mini-card h3 {
   font-size: 22px;
   font-weight: 700;
+  margin-bottom: 18px;
+  color: #1f2937;
 }
 
-/* clickable */
-.mini-card.clickable {
-  cursor: pointer;
-}
+/* =========================
+   MESS STATUS (SINGLE LINE)
+========================= */
 
-/* ===== MESS SETTINGS (inherits your structure) ===== */
-.mess-card {
+.mess-toggle {
   background: #ffffff;
-  border-radius: 12px;
-  padding: 14px;
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
-}
+  border-radius: 14px;
+  padding: 14px 18px;
+  margin-bottom: 18px;
 
-.mess-card h3 {
-  font-size: 15px;
-  margin-bottom: 10px;
-}
-
-/* toggle row */
-.toggle-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 10px;
+
+  box-shadow: 0 6px 18px rgba(0,0,0,0.05);
 }
 
-/* switch */
-.switch {
-  position: relative;
-  width: 44px;
-  height: 22px;
+.mess-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
 }
 
-.switch input {
-  display: none;
+.mess-title {
+  font-weight: 600;
+  font-size: 14px;
 }
 
-.slider {
-  position: absolute;
-  inset: 0;
-  background: #ccc;
-  border-radius: 20px;
-  transition: 0.3s;
+.mess-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
-.slider::before {
-  content: "";
-  position: absolute;
-  width: 18px;
-  height: 18px;
-  top: 2px;
-  left: 2px;
-  background: #fff;
+.status-dot {
+  width: 10px;
+  height: 10px;
   border-radius: 50%;
-  transition: 0.3s;
 }
 
-.switch input:checked + .slider {
+.status-dot.open {
   background: #22c55e;
 }
 
-.switch input:checked + .slider::before {
-  transform: translateX(22px);
+.status-dot.closed {
+  background: #ef4444;
 }
 
-/* textarea */
-.mess-card textarea {
-  width: 100%;
-  min-height: 70px;
-  padding: 10px;
-  border-radius: 8px;
-  border: 1px solid #ddd;
+.status-text {
   font-size: 13px;
-  margin-top: 8px;
+  color: #444;
+}
+
+/* =========================
+   CARDS GRID
+========================= */
+
+.cards-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+.card {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 18px;
+
+  box-shadow: 0 8px 22px rgba(0,0,0,0.05);
+  transition: all 0.25s ease;
+}
+
+.card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 28px rgba(0,0,0,0.08);
+}
+
+.card p {
+  font-size: 13px;
+  color: #6b7280;
+}
+
+.card h2 {
+  font-size: 26px;
+  font-weight: 700;
+  margin-top: 6px;
+}
+
+.card.clickable {
+  cursor: pointer;
+}
+
+/* =========================
+   PAYMENT CARD
+========================= */
+
+.payment-card {
+  margin-bottom: 18px;
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
   margin-bottom: 10px;
 }
 
-/* image */
-.mess-image {
-  width: 100%;
-  border-radius: 10px;
-  margin-bottom: 10px;
-}
-
-/* button */
-.save-btn {
-  width: 100%;
-  padding: 12px;
-  background: #2563eb;
-  color: white;
-  border: none;
-  border-radius: 10px;
-  font-size: 14px;
+.card-header h3 {
+  font-size: 16px;
   font-weight: 600;
 }
 
-/* ===== PAYMENTS ===== */
-.history-box {
-  background: #ffffff;
-  border-radius: 12px;
-  padding: 14px;
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
-}
-
-.history-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 10px;
-}
-
-.history-header h3 {
-  font-size: 15px;
-}
-
-.history-header input {
+/* push date right */
+.card-header input {
+  margin-left: auto;
+  padding: 6px;
   font-size: 12px;
-  padding: 4px;
+  border-radius: 6px;
+  border: 1px solid #ddd;
 }
 
-/* payment row */
-.history-row {
+.payment-row {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  padding: 10px 0;
-  border-top: 1px solid #eee;
+  padding: 8px 0;
+  border-top: 1px solid #f1f5f9;
+  font-size: 14px;
 }
 
-.history-row:first-child {
+.payment-row:first-child {
   border-top: none;
 }
 
-.history-row strong {
-  font-size: 14px;
-}
+/* =========================
+   BUTTONS
+========================= */
 
-.history-row p {
-  font-size: 12px;
-  color: #666;
-  margin: 2px 0 0;
-}
-
-.history-right {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-/* status */
-.status {
-  font-size: 16px;
-}
-
-.status.paid {
-  color: #16a34a;
-}
-
-.status.pending {
-  color: #f59e0b;
-}
-
-/* info button */
-.info-btn {
-  background: none;
-  border: none;
-  font-size: 16px;
-}
-
-/* ===== ACTION BUTTONS ===== */
-.action-box {
+.actions-row {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  margin-top: 16px;
 }
 
 .primary-btn {
-  width: 100%;
   padding: 12px;
-  background: #2563eb;
-  color: white;
-  border: none;
   border-radius: 10px;
+  border: none;
+
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+  color: white;
+
   font-weight: 600;
+  cursor: pointer;
 }
 
 .secondary-btn {
-  width: 100%;
   padding: 12px;
+  border-radius: 10px;
+  border: none;
+
   background: #e5e7eb;
   color: #111;
-  border: none;
-  border-radius: 10px;
+
   font-weight: 500;
+  cursor: pointer;
 }
 
-/* ===== TEXT ===== */
+/* =========================
+   TEXT
+========================= */
+
 .muted {
   font-size: 13px;
-  color: #777;
+  color: #9ca3af;
+}
+
+/* =========================
+   MOBILE
+========================= */
+
+@media (max-width: 768px) {
+  .cards-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+.mess-toggle.clickable {
+  cursor: pointer;
+}
+
+.mess-dropdown {
+  margin-top: 10px;
+  animation: fadeDown 0.25s ease;
+}
+
+@keyframes fadeDown {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+
+.mess-dropdown-card {
+  background: #fff;
+  border-radius: 14px;
+  padding: 14px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.05);
 }

@@ -1,45 +1,418 @@
-#root {
+body {
+  margin: 0;
+  overflow-x: hidden;
+}
+
+/* =========================
+   FULL BACKGROUND FIX
+========================= */
+
+.landing-bg {
   min-height: 100vh;
   width: 100%;
+
+  margin-top: -70px;
+  padding-top: 70px;
+
+  background: url("./assets/backround.png");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+
+  background-attachment: scroll;
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
+/* =========================
+   WRAPPER (FIXED ISSUE)
+========================= */
+
+.landing-wrapper {
+  width: 100%;
+  padding: 80px 16px;
+
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  /* ❌ OLD: position: fixed */
+  /* ✅ FIX */
+  position: relative;
+
+  overflow: visible;
 }
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
+
+/* =========================
+   HERO CONTENT
+========================= */
+
+.landing-card {
+  max-width: 520px;
+  background: transparent;
+  text-align: left;
 }
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
+
+/* =========================
+   TITLE
+========================= */
+
+.landing-title {
+  font-size: 38px;
+  font-weight: 700;
+  line-height: 1.3;
+  color: #1f2937;
 }
 
+.highlight {
+  color: #16a34a;
+}
 
+/* =========================
+   DESC
+========================= */
 
+.landing-desc {
+  margin-top: 14px;
+  font-size: 15px;
+  color: #6b7280;
+}
 
+/* =========================
+   BUTTONS
+========================= */
 
+.landing-actions {
+  margin-top: 22px;
+  display: flex;
+  gap: 10px;
+}
 
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
+.btn {
+  padding: 10px 16px;
+  font-size: 14px;
+  font-weight: 600;
+
+  border-radius: 8px;
+  cursor: pointer;
+  border: none;
+
+  transition: all 0.2s ease;
+}
+
+.btn.primary {
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+  color: white;
+  box-shadow: 0 6px 18px rgba(34, 197, 94, 0.25);
+}
+
+.btn.primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 22px rgba(34, 197, 94, 0.35);
+}
+
+.btn.secondary {
+  background: #f1f5f9;
+  color: #1f2937;
+}
+
+.btn.secondary:hover {
+  background: #e2e8f0;
+}
+
+/* =========================
+   HERO AVATAR
+========================= */
+
+.hero-avatar {
+  position: absolute;
+  right: -100px;   /* move more to right */
+  top: 60px;      /* move upward */
+
+  width: 580px;
+  max-width: none;
+
+  pointer-events: none;
+
+  animation: floatUpDown 5s ease-in-out infinite;
+  filter: drop-shadow(0 12px 30px rgba(0, 0, 0, 0.18));
+}
+
+/* =========================
+   FLOAT ANIMATION
+========================= */
+
+@keyframes floatUpDown {
+  0% { transform: translatey(0px); }
+  50% { transform: translatey(-10px); }
+  100% { transform: translatey(0px); }
+}
+
+/* =========================
+   FEATURES SECTION (NEW)
+========================= */
+
+.features-section {
+  padding: 40px 16px;
+  display: flex;
+  justify-content: center;
+}
+
+.features-container {
+  display: flex;
+  gap: 16px;
+  max-width: 1100px;
+  width: 100%;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.feature-card {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 20px;
+  width: 280px;
+  text-align: center;
+
+  box-shadow: 0 8px 20px rgba(0,0,0,0.05);
+  transition: all 0.25s ease;
+}
+
+.feature-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 30px rgba(0,0,0,0.08);
+}
+
+.feature-icon {
+  font-size: 34px;
+  margin-bottom: 10px;
+}
+
+.feature-card h3 {
+  font-size: 16px;
+  margin-bottom: 8px;
+}
+
+.feature-card p {
+  font-size: 13px;
+  color: #666;
+  margin-bottom: 14px;
+}
+
+.feature-btn {
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: none;
+  background: #e5e7eb;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.feature-btn.green {
+  background: #16a34a;
+  color: white;
+}
+
+/* =========================
+   MOBILE FIRST
+========================= */
+
+@media (max-width: 768px) {
+
+  .landing-card {
+    margin-top: -60px;
   }
-  to {
-    transform: rotate(360deg);
+
+  .landing-title {
+    font-size: 32px;
+    line-height: 1.5;
+  }
+
+  .landing-title .highlight {
+    display: block;
+    margin-top: 6px;
+  }
+
+  .landing-desc {
+    font-size: 16px;
+    max-width: 240px;
+    line-height: 1.6;
+
+    position: relative;
+    z-index: 2;
+
+    margin-right: auto;
+    margin-top: 16px;
+  }
+
+  .landing-actions {
+    flex-direction: column;
+    margin-top: 20px;
+    gap: 8px;
+  }
+
+  .landing-actions a {
+    display: inline-block;
+    width: fit-content;
+  }
+
+  .btn {
+    padding: 8px 14px;
+    font-size: 14px;
+    border-radius: 8px;
+    width: fit-content;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  }
+
+  .btn.secondary {
+    background: #e5e7eb;
+  }
+
+  .landing-actions .btn {
+    margin-bottom: 6px;
+  }
+
+  .landing-bg {
+    background-size: contain;
+    background-position: top;
+  }
+
+  .landing-wrapper {
+    position: relative;
+    overflow: hidden; /* 🔥 KEY FIX */
+  }
+
+  @media (max-width: 768px) {
+
+  .hero-avatar {
+    position: absolute;
+
+    right: -130px; /* 🔥 push outside instead of scaling */
+    top: 100px;
+
+    width: 500px;
+
+    transform: none; /* remove translate */
+
+    opacity: 0.95;
+    z-index: 3;
+    animation: none;
+    animation: floatUpDown 4s ease-in-out infinite;
+  
+    
+  }
+  
+
+}
+
+  /* 🔥 FEATURES MOBILE FIX */
+  .features-container {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .feature-card {
+    width: 90%;
+  }
+
+  /* TEXT SWITCH */
+  .highlight {
+    display: block;
+    margin-top: 6px;
+    height: 40px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .text-switch {
+    position: relative;
+    display: block;
+    height: 100%;
+  }
+
+  .text-switch span {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+
+    opacity: 0;
+    animation: fadeSwitch 4s infinite;
+
+    font-size: 32px;
+    font-weight: 700;
+  }
+
+  .text-switch span:nth-child(1) {
+    animation-delay: 0s;
+  }
+
+  .text-switch span:nth-child(2) {
+    animation-delay: 2s;
+  }
+
+  @keyframes fadeSwitch {
+    0% { opacity: 0; }
+    10% { opacity: 1; }
+    40% { opacity: 1; }
+    50% { opacity: 0; }
+    100% { opacity: 0; }
   }
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
-  }
+
+/* =========================
+   FLIP CARD EFFECT (NEW)
+========================= */
+
+.flip-card {
+  perspective: 1000px;
 }
 
-.card {
-  padding: 2em;
+/* fix height so flip works properly */
+.flip-card {
+  height: 240px;
 }
 
-.read-the-docs {
-  color: #888;
+.flip-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+
+  transition: transform 0.6s ease;
+  transform-style: preserve-3d;
+}
+
+/* when flipped */
+.flip-inner.flipped {
+  transform: rotateY(180deg);
+}
+
+/* front & back sides */
+.flip-front,
+.flip-back {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+
+  backface-visibility: hidden;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+/* back side */
+.flip-back {
+  transform: rotateY(180deg);
+}
+
+/* =========================
+   SMOOTH TEXT FADE
+========================= */
+
+.flip-front p,
+.flip-back p,
+.flip-front h3,
+.flip-back h3 {
+  transition: opacity 0.3s ease;
 }

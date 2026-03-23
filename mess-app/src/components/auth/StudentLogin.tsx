@@ -3,21 +3,20 @@ import { useNavigate } from "react-router-dom";
 import "../../styles/authCard.css";
 
 const StudentLogin = () => {
-  const [phone, setPhone] = useState("");
+  const [identifier, setIdentifier] = useState(""); // phone or email
   const [password, setPassword] = useState("");
   const [verified, setVerified] = useState(false);
-  const [passwordSet, setPasswordSet] = useState(false);
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
 
   const navigate = useNavigate();
 
   /* =========================
-     VERIFY PHONE NUMBER
+     STEP 1: VERIFY USER
   ========================= */
   const handleVerify = async () => {
-    if (!phone) {
-      setMessage("Please enter phone number");
+    if (!identifier) {
+      setMessage("Please enter phone or email");
       return;
     }
 
@@ -25,10 +24,10 @@ const StudentLogin = () => {
     setMessage("");
 
     try {
-      const res = await fetch("http://localhost:5000/api/students/verify", {
+      const res = await fetch("http://localhost:5000/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phone }),
+        body: JSON.stringify({ identifier }),
       });
 
       const data = await res.json();
@@ -39,17 +38,18 @@ const StudentLogin = () => {
         return;
       }
 
-      setVerified(true);
-      setPasswordSet(data.passwordSet);
-
-      // New student → set password
-      if (!data.passwordSet) {
+      // ✅ First-time login → set password
+      if (data.firstLogin) {
         setLoading(false);
-        navigate("/student/set-password", { state: { phone } });
+        navigate("/student/set-password", {
+          state: { phone: data.phone },
+        });
         return;
       }
 
-      setMessage("✔ Number verified");
+      // ✅ Existing user → show password input
+      setVerified(true);
+      setMessage("✔ User found. Enter password");
     } catch (err) {
       setMessage("Server error");
     }
@@ -58,7 +58,7 @@ const StudentLogin = () => {
   };
 
   /* =========================
-     LOGIN STUDENT
+     STEP 2: LOGIN USER
   ========================= */
   const handleLogin = async () => {
     if (!password) {
@@ -70,10 +70,10 @@ const StudentLogin = () => {
     setMessage("");
 
     try {
-      const res = await fetch("http://localhost:5000/api/students/login", {
+      const res = await fetch("http://localhost:5000/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phone, password }),
+        body: JSON.stringify({ identifier, password }),
       });
 
       const data = await res.json();
@@ -85,18 +85,21 @@ const StudentLogin = () => {
       }
 
       /* =========================
-         ✅ CORRECT AUTH STORAGE
+         SAVE AUTH
       ========================= */
-
-      // clear any old admin/student session
       localStorage.clear();
 
-      // store correct auth data
       localStorage.setItem("token", data.token);
-      localStorage.setItem("role", "STUDENT");
-      localStorage.setItem("student", JSON.stringify(data.student));
+      localStorage.setItem("role", data.role);
 
-      navigate("/student/dashboard", { replace: true });
+      /* =========================
+         ROLE-BASED REDIRECT
+      ========================= */
+      if (data.role === "MESS_ADMIN") {
+        navigate("/admin/dashboard", { replace: true });
+      } else {
+        navigate("/student/dashboard", { replace: true });
+      }
     } catch (err) {
       setMessage("Server error");
     }
@@ -107,25 +110,25 @@ const StudentLogin = () => {
   return (
     <div className="auth-wrapper">
       <div className="auth-card">
-        <h2>Student Login</h2>
+        <h2>Login</h2>
 
-        {/* PHONE INPUT */}
+        {/* IDENTIFIER INPUT */}
         <input
-          placeholder="Phone Number"
-          value={phone}
-          onChange={(e) => setPhone(e.target.value)}
+          placeholder="Phone or Email"
+          value={identifier}
+          onChange={(e) => setIdentifier(e.target.value)}
           disabled={verified}
         />
 
         {/* VERIFY BUTTON */}
         {!verified && (
           <button onClick={handleVerify} disabled={loading}>
-            {loading ? "Verifying..." : "Verify Number"}
+            {loading ? "Verifying..." : "Verify"}
           </button>
         )}
 
-        {/* PASSWORD + LOGIN */}
-        {verified && passwordSet && (
+        {/* PASSWORD INPUT */}
+        {verified && (
           <>
             <input
               type="password"
