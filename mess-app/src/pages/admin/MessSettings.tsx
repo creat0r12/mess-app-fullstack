@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
-import "../../styles/messSettings.css";
+import "../../styles/MessSettings.css";
 
 type MessSettingsType = {
   id: number;
