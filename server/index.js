@@ -8,7 +8,10 @@ const app = express();
 /* =========================
    GLOBAL MIDDLEWARES
 ========================= */
-app.use(cors());
+app.use(cors({
+  origin: "*", // later we can restrict to frontend URL
+}));
+
 app.use(express.json());
 app.use("/uploads", express.static("uploads"));
 
@@ -51,10 +54,21 @@ app.get("/api/protected", authenticate, (req, res) => {
 });
 
 /* =========================
+   GLOBAL ERROR HANDLER (NEW 🔥)
+========================= */
+app.use((err, req, res, next) => {
+  console.error("❌ Server Error:", err);
+
+  res.status(500).json({
+    message: "Internal Server Error",
+  });
+});
+
+/* =========================
    SERVER START
 ========================= */
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log(`🚀 Server running on port ${PORT}`);
 });
