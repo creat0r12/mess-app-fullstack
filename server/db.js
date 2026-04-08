@@ -8,7 +8,7 @@ const db = mysql.createPool({
   database: process.env.DB_NAME,
 
   ssl: {
-    rejectUnauthorized: true, // 🔒 secure (important for Aiven)
+    rejectUnauthorized: false
   },
 
   waitForConnections: true,
@@ -16,13 +16,12 @@ const db = mysql.createPool({
   queueLimit: 0,
 });
 
-// test connection once
+// test connection
 db.getConnection((err, conn) => {
   if (err) {
-    console.error("❌ Aiven MySQL connection failed:");
-    console.error(err); // 🔥 full error (important for debugging)
+    console.error("❌ Aiven MySQL connection failed:", err);
   } else {
-    console.log("✅ Aiven MySQL connected successfully 🚀");
+    console.log("✅ Aiven MySQL connected successfully");
     conn.release();
   }
 });
