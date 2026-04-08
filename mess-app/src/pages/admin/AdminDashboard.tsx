@@ -31,8 +31,8 @@ const AdminDashboard = () => {
 
   const navigate = useNavigate();
 
-  /* ===== CONFIGshowMessDropdown  ===== */
-  const API = `${import.meta.env.VITE_API_URL}";
+  /* ===== CONFIG ===== */
+  const API = import.meta.env.VITE_API_URL;
   const token = localStorage.getItem("token");
   const headers = { Authorization: `Bearer ${token}` };
 
@@ -56,8 +56,6 @@ const AdminDashboard = () => {
   /* ===== NEW: PAYMENT MODAL ===== */
   const [showPaymentsModal, setShowPaymentsModal] = useState(false);
 
-
-
   const loadMessStatus = async () => {
     try {
       const res = await axios.get(`${API}/api/mess-settings`, { headers });
@@ -70,7 +68,6 @@ const AdminDashboard = () => {
   /* ================= LOAD DASHBOARD ================= */
 
   useEffect(() => {
-
     if (!token) return;
 
     const loadDashboard = async () => {
@@ -165,16 +162,13 @@ const AdminDashboard = () => {
 
       {/* ================= MESS STATUS ================= */}
       <div className="mess-toggle">
-
-        {/* TOP ROW */}
         <div className="mess-row">
-
           <div className="mess-title">Mess Status</div>
 
           <div
             className="mess-center"
             onClick={() => {
-              if (!messOpen) return;        // ❗ block when OFF
+              if (!messOpen) return;
               setExpanded(prev => !prev);
             }}
           >
@@ -190,10 +184,7 @@ const AdminDashboard = () => {
             )}
           </div>
 
-          <label
-            className="switch"
-            onClick={(e) => e.stopPropagation()}
-          >
+          <label className="switch" onClick={(e) => e.stopPropagation()}>
             <input
               type="checkbox"
               checked={messOpen}
@@ -202,7 +193,6 @@ const AdminDashboard = () => {
 
                 setMessOpen(value);
 
-                // ✅ collapse immediately when OFF
                 if (!value) {
                   setExpanded(false);
                 }
@@ -221,13 +211,8 @@ const AdminDashboard = () => {
             />
             <span className="slider"></span>
           </label>
-
         </div>
 
-
-
-
-        {/* EXPANDED SETTINGS */}
         {expanded && (
           <div className="mess-expanded">
             <MessSettings />
@@ -242,26 +227,17 @@ const AdminDashboard = () => {
           <h2>{total}</h2>
         </div>
 
-        <div
-          className="card clickable"
-          onClick={() => navigate("/admin/active")}
-        >
+        <div className="card clickable" onClick={() => navigate("/admin/active")}>
           <p>Active</p>
           <h2>{active}</h2>
         </div>
 
-        <div
-          className="card clickable"
-          onClick={() => navigate("/admin/pending")}
-        >
+        <div className="card clickable" onClick={() => navigate("/admin/pending")}>
           <p>Pending</p>
           <h2>{pending}</h2>
         </div>
 
-        <div
-          className="card clickable"
-          onClick={() => navigate("/admin/student-leaves")}
-        >
+        <div className="card clickable" onClick={() => navigate("/admin/student-leaves")}>
           <p>Leaves</p>
           <h2>{leaveCount}</h2>
         </div>
@@ -284,7 +260,6 @@ const AdminDashboard = () => {
         ) : (
           filteredPayments.slice(0, 3).map((p) => (
             <div key={p.id} className="payment-row">
-
               <div className="payment-left">
                 <div className="avatar">
                   {p.student_name.charAt(0)}
@@ -305,7 +280,6 @@ const AdminDashboard = () => {
                   ℹ️
                 </span>
               </div>
-
             </div>
           ))
         )}

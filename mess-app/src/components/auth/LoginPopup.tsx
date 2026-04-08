@@ -6,14 +6,13 @@ type Props = {
     onClose: () => void;
 };
 
-
-
 // 
 // const testRegister = async () => {
 //     try {
+//         const API = import.meta.env.VITE_API_URL;
 //         const random = Date.now(); // always unique
 
-//         const res = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/register", {
+//         const res = await fetch(`${API}/api/auth/register`, {
 //             method: "POST",
 //             headers: {
 //                 "Content-Type": "application/json",
@@ -34,11 +33,9 @@ type Props = {
 //     }
 // };
 
-
-// 
-
-
 const LoginPopup = ({ onClose }: Props) => {
+    const API = import.meta.env.VITE_API_URL;
+
     const [identifier, setIdentifier] = useState("");
     const [password, setPassword] = useState("");
     const [error, setError] = useState("");
@@ -52,7 +49,7 @@ const LoginPopup = ({ onClose }: Props) => {
         setError("");
 
         try {
-            const res = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/login", {
+            const res = await fetch(`${API}/api/auth/login`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -86,7 +83,6 @@ const LoginPopup = ({ onClose }: Props) => {
             saveToken(data.token);
             localStorage.setItem("role", data.role);
 
-
             // ✅ CLOSE POPUP
             onClose();
 
@@ -94,8 +90,6 @@ const LoginPopup = ({ onClose }: Props) => {
             setError("Unable to login. Please try again.");
         }
     };
-
-
 
     return (
         <div className="login-popup">
@@ -126,8 +120,6 @@ const LoginPopup = ({ onClose }: Props) => {
             </button> */}
 
             {/* <button onClick={testRegister}>Test Student Register</button> */}
-
-
         </div>
     );
 };

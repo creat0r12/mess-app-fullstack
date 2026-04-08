@@ -3,7 +3,7 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import "../styles/findMess.css";
 
-const API = `${import.meta.env.VITE_API_URL}";
+const API = import.meta.env.VITE_API_URL;
 
 const FindMess = () => {
   const [messes, setMesses] = useState<any[]>([]);
@@ -85,7 +85,6 @@ const FindMess = () => {
                   {/* Pricing Chart */}
                   <div className="price-chart">
 
-                    {/* HEADER */}
                     <div className="price-row header">
                       <span>Type</span>
                       <span>Girls</span>
@@ -95,12 +94,10 @@ const FindMess = () => {
                     <div className="price-row">
                       <span>1 Time</span>
 
-                      {/* Girls */}
                       <span>
                         {m.girls_one_time ? `₹${m.girls_one_time}` : "—"}
                       </span>
 
-                      {/* Boys */}
                       <span>
                         {m.boys_one_time ? `₹${m.boys_one_time}` : "—"}
                       </span>
@@ -109,12 +106,10 @@ const FindMess = () => {
                     <div className="price-row">
                       <span>2 Time</span>
 
-                      {/* Girls */}
                       <span>
                         {m.girls_two_time ? `₹${m.girls_two_time}` : "—"}
                       </span>
 
-                      {/* Boys */}
                       <span>
                         {m.boys_two_time ? `₹${m.boys_two_time}` : "—"}
                       </span>
@@ -122,7 +117,6 @@ const FindMess = () => {
 
                   </div>
 
-                  {/* TIMING */}
                   <div className="mess-timing">
                     ⏰ Morning: 10:30 AM – 1:00 PM <br />
                     🌙 Night: 7:00 PM – 9:00 PM

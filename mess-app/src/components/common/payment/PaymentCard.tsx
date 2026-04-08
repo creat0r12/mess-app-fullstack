@@ -18,7 +18,7 @@ type Props = {
     onCancel?: (id: number) => void;
 };
 
-const API = `${import.meta.env.VITE_API_URL}";
+const API = import.meta.env.VITE_API_URL;
 
 const PaymentCard = ({
     payment,

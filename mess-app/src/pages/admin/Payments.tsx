@@ -3,7 +3,7 @@ import { getToken } from "../../utils/auth";
 import "../../styles/Payments.css";
 import PaymentModalSimple from "../../components/common/payment/PaymentModalSimple";
 
-const API = `${import.meta.env.VITE_API_URL}";
+const API = import.meta.env.VITE_API_URL;
 
 /* ================= TYPES ================= */
 
@@ -126,12 +126,12 @@ const Payments = () => {
 
       {/* MODAL */}
       {selected && (
-  <PaymentModalSimple
-    role="admin"
-    payment={selected}
-    onClose={() => setSelected(null)}
-  />
-)}
+        <PaymentModalSimple
+          role="admin"
+          payment={selected}
+          onClose={() => setSelected(null)}
+        />
+      )}
     </div>
   );
 };

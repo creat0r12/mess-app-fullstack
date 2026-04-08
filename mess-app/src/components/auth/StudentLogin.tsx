@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import "../../styles/authCard.css";
 
 const StudentLogin = () => {
+  const API = import.meta.env.VITE_API_URL;
+
   const [identifier, setIdentifier] = useState(""); // phone or email
   const [password, setPassword] = useState("");
   const [verified, setVerified] = useState(false);
@@ -24,7 +26,7 @@ const StudentLogin = () => {
     setMessage("");
 
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/login", {
+      const res = await fetch(`${API}/api/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ identifier }),
@@ -70,7 +72,7 @@ const StudentLogin = () => {
     setMessage("");
 
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/login", {
+      const res = await fetch(`${API}/api/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ identifier, password }),

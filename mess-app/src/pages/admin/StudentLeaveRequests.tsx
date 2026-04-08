@@ -37,7 +37,7 @@ const calculateDays = (start: string, end?: string) => {
 };
 
 const StudentLeaveRequests = () => {
-  const API = `${import.meta.env.VITE_API_URL}";
+  const API = import.meta.env.VITE_API_URL;
   const token = localStorage.getItem("token");
   const headers = { Authorization: `Bearer ${token}` };
 
@@ -45,7 +45,6 @@ const StudentLeaveRequests = () => {
   const [expandedId, setExpandedId] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // ✅ SEARCH STATE (correct place)
   const [searchTerm, setSearchTerm] = useState("");
 
   const fetchLeaves = async () => {
@@ -116,7 +115,6 @@ const StudentLeaveRequests = () => {
     <div className="student-leave-page">
       <h2>Student Leave Requests</h2>
 
-      {/* ✅ SEARCH BAR */}
       <div className="search-bar">
         <input
           type="text"
@@ -135,9 +133,10 @@ const StudentLeaveRequests = () => {
       )}
 
       {filteredGrouped.map((student) => (
-        <div key={`${student.student_id}-${student.student_name}-${student.leaves.length}`} className="leave-card">
-
-          {/* 🔹 MAIN CARD */}
+        <div
+          key={`${student.student_id}-${student.student_name}-${student.leaves.length}`}
+          className="leave-card"
+        >
           <div
             className="leave-info"
             onClick={() =>
@@ -151,7 +150,6 @@ const StudentLeaveRequests = () => {
             <p>Student ID: {student.student_id}</p>
             <p>Total Requests: {student.leaves.length}</p>
 
-            {/* 🔥 ONE BUTTON PER USER */}
             <button
               className="manage-btn"
               onClick={(e) => {
@@ -163,7 +161,6 @@ const StudentLeaveRequests = () => {
             </button>
           </div>
 
-          {/* 🔽 EXPANDED HISTORY */}
           {expandedId === student.student_id && (
             <div style={{ marginTop: "10px" }}>
               {student.leaves.map((leave) => {
@@ -173,7 +170,6 @@ const StudentLeaveRequests = () => {
                 );
 
                 return (
-
                   <div
                     key={`${leave.id}-${leave.student_id}-${leave.leave_date}`}
                     className="leave-card"
@@ -198,7 +194,6 @@ const StudentLeaveRequests = () => {
                       </p>
                     </div>
 
-                    {/* ACTIONS */}
                     <div className="leave-actions">
                       {leave.status === "PENDING" && (
                         <>

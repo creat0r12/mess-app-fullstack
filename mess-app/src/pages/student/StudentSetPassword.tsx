@@ -3,6 +3,8 @@ import { useNavigate, useLocation } from "react-router-dom";
 import "../../styles/authCard.css";
 
 const StudentSetPassword = () => {
+  const API = import.meta.env.VITE_API_URL;
+
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [message, setMessage] = useState("");
@@ -25,7 +27,7 @@ const StudentSetPassword = () => {
 
     try {
       const res = await fetch(
-        `${import.meta.env.VITE_API_URL}/api/students/set-password",
+        `${API}/api/students/set-password`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

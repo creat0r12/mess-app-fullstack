@@ -2,7 +2,7 @@ import { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
-const API = `${import.meta.env.VITE_API_URL}";
+const API = import.meta.env.VITE_API_URL;
 
 const PlatformAdminLogin = () => {
     const [email, setEmail] = useState("");
@@ -15,21 +15,19 @@ const PlatformAdminLogin = () => {
         console.log("Trying platform admin login:", { email, password });
 
         try {
-    const res = await axios.post(
-        `${API}/api/admin/platform-admin/login`,
-        { email, password }
-    );
+            const res = await axios.post(
+                `${API}/api/admin/platform-admin/login`,
+                { email, password }
+            );
 
-    localStorage.setItem("token", res.data.token);
-    localStorage.setItem("role", "PLATFORM_ADMIN");
+            localStorage.setItem("token", res.data.token);
+            localStorage.setItem("role", "PLATFORM_ADMIN");
 
-    navigate("/platform-admin/mess-requests", { replace: true });
+            navigate("/platform-admin/mess-requests", { replace: true });
 
-} catch (err: any) {
-    alert(err?.response?.data?.message || "Login failed");
-}
-
-
+        } catch (err: any) {
+            alert(err?.response?.data?.message || "Login failed");
+        }
     };
 
     return (

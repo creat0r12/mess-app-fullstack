@@ -10,7 +10,7 @@ type MessSettingsType = {
   image_url: string | null;
 };
 
-const API = `${import.meta.env.VITE_API_URL}";
+const API = import.meta.env.VITE_API_URL;
 
 const MessSettings = () => {
 
@@ -39,7 +39,6 @@ const MessSettings = () => {
   useEffect(() => {
     const load = async () => {
       try {
-
         const res = await axios.get<MessSettingsType>(
           `${API}/api/mess-settings`,
           { headers }
@@ -95,7 +94,6 @@ const MessSettings = () => {
         form.append("image", imageFile);
       }
 
-      // ✅ ADD THIS
       if (removeImage) {
         form.append("remove_image", "1");
       }
@@ -106,6 +104,7 @@ const MessSettings = () => {
 
       setImageFile(null);
       setRemoveImage(false);
+
     } catch (err) {
       console.error(err);
       alert("Save failed");
@@ -114,6 +113,7 @@ const MessSettings = () => {
       setSaving(false);
     }
   };
+
   if (loading) {
     return <p style={{ padding: "20px" }}>Loading...</p>;
   }
@@ -121,18 +121,10 @@ const MessSettings = () => {
   return (
     <div className="mess-settings-page">
 
-
-
-
-      {/* SLIDE SECTION */}
-
       <div className={`mess-details ${messOpen ? "show" : ""}`}>
-
-        {/* NOTICE + MENU SIDE BY SIDE */}
 
         <div className="row-two">
 
-          {/* NOTICE */}
           <div className="card">
             <h4>Notice</h4>
             <input
@@ -143,7 +135,6 @@ const MessSettings = () => {
             />
           </div>
 
-          {/* MENU */}
           <div className="card">
             <h4>Menu</h4>
             <input
@@ -155,9 +146,6 @@ const MessSettings = () => {
           </div>
 
         </div>
-
-
-        {/* IMAGE */}
 
         <div className="card">
 
@@ -177,7 +165,7 @@ const MessSettings = () => {
                 onClick={() => {
                   setImagePreview(null);
                   setImageFile(null);
-                  setRemoveImage(true);   // 🔥 important
+                  setRemoveImage(true);
                 }}
               >
                 Remove Image
@@ -201,9 +189,6 @@ const MessSettings = () => {
           </label>
 
         </div>
-
-
-        {/* SAVE */}
 
         <button
           className="save-btn"

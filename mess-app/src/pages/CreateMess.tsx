@@ -2,12 +2,13 @@ import { useState } from "react";
 import axios from "axios";
 import "../styles/createMess.css";
 
-const API = `${import.meta.env.VITE_API_URL}";
+const API = import.meta.env.VITE_API_URL;
 
 const CreateMess = () => {
 
   const [showPassword, setShowPassword] = useState(false);
-const [showConfirm, setShowConfirm] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+
   const [form, setForm] = useState({
     owner_name: "",
     name: "",
@@ -50,7 +51,7 @@ const [showConfirm, setShowConfirm] = useState(false);
 
     try {
       await axios.post(`${API}/api/admin/create-mess-request`, {
-        owner_name: form.owner_name.trim(), // ✅ ADD THIS
+        owner_name: form.owner_name.trim(),
         name: form.name.trim(),
         phone: form.phone.trim(),
         email: form.email.trim() || null,
@@ -62,7 +63,7 @@ const [showConfirm, setShowConfirm] = useState(false);
       alert("✅ Mess request submitted successfully!");
 
       setForm({
-        owner_name: "",  // ✅ added
+        owner_name: "",
         name: "",
         phone: "",
         email: "",
@@ -71,6 +72,7 @@ const [showConfirm, setShowConfirm] = useState(false);
         password: "",
         confirmPassword: "",
       });
+
     } catch (err: any) {
       alert(err?.response?.data?.message || "❌ Failed to submit request");
     } finally {
@@ -82,7 +84,6 @@ const [showConfirm, setShowConfirm] = useState(false);
     <div className="create-mess-page">
       <div className="create-mess-card">
         <h2>Create Mess Request</h2>
-
 
         <form className="create-mess-form" onSubmit={handleSubmit}>
 
@@ -162,7 +163,6 @@ const [showConfirm, setShowConfirm] = useState(false);
           {/* PASSWORD ROW */}
           <div className="form-row">
 
-            {/* PASSWORD */}
             <div className="form-group password-group">
               <label>Password</label>
               <div className="password-wrapper">
@@ -183,7 +183,6 @@ const [showConfirm, setShowConfirm] = useState(false);
               </div>
             </div>
 
-            {/* CONFIRM */}
             <div className="form-group password-group">
               <label>Confirm</label>
               <div className="password-wrapper">
@@ -206,7 +205,6 @@ const [showConfirm, setShowConfirm] = useState(false);
 
           </div>
 
-          {/* SUBMIT */}
           <button type="submit" disabled={loading}>
             {loading ? "Submitting..." : "Submit"}
           </button>
@@ -215,7 +213,6 @@ const [showConfirm, setShowConfirm] = useState(false);
       </div>
     </div>
   );
-
 };
 
 export default CreateMess;

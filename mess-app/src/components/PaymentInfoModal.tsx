@@ -2,7 +2,7 @@ import { useState } from "react";
 import "../styles/paymentInfoModal.css";
 import type { PaymentHistory } from "../types/payment";
 
-const API = `${import.meta.env.VITE_API_URL}";
+const API = import.meta.env.VITE_API_URL;
 
 /* ================= TYPES ================= */
 
@@ -18,7 +18,6 @@ type Payment = {
   submitted_at?: string | null;
   proof_url?: string | null;
 };
-
 
 type Props = {
   payment: Payment;
@@ -47,7 +46,6 @@ const PaymentInfoModal = ({
   // approved / paid transactions only
   const paidHistory = history.filter((h) => h.status === "APPLIED");
 
-
   /* ================= STATUS LOGIC ================= */
   const getUIStatus = (): "DUE" | "PENDING" | "ACTIVE" | "PAID" => {
     if (pendingTxn) return "PENDING";
@@ -65,7 +63,6 @@ const PaymentInfoModal = ({
     return "DUE";
   };
 
-
   const uiStatus = getUIStatus();
 
   /* ================= SUMMARY ================= */
@@ -80,22 +77,21 @@ const PaymentInfoModal = ({
   const selectedSummary =
     expandedKey === "current"
       ? {
-        total,
-        paid,
-        due: remaining,
-        status: uiStatus,
-      }
-
+          total,
+          paid,
+          due: remaining,
+          status: uiStatus,
+        }
       : (() => {
-        const index = Number(expandedKey.split("-")[1]);
-        const h = paidHistory[index];
-        return {
-          total: h.amount,
-          paid: h.amount,
-          due: 0,
-          status: "PAID" as const,
-        };
-      })();
+          const index = Number(expandedKey.split("-")[1]);
+          const h = paidHistory[index];
+          return {
+            total: h.amount,
+            paid: h.amount,
+            due: 0,
+            status: "PAID" as const,
+          };
+        })();
 
   /* ================= ACTIONS ================= */
 
@@ -128,6 +124,7 @@ const PaymentInfoModal = ({
 
     onClose();
   };
+
   /* ================= UI ================= */
   return (
     <div className="modal-overlay">
@@ -149,36 +146,24 @@ const PaymentInfoModal = ({
         <div className="row-cards">
           <div className="card">
             <h4>Student</h4>
-            <p>
-              <b>Name:</b> {payment.student_name}
-            </p>
-            <p>
-              <b>Phone:</b> {payment.phone || "—"}
-            </p>
-            <p>
-              <b>Gender:</b> {payment.gender || "—"}
-            </p>
+            <p><b>Name:</b> {payment.student_name}</p>
+            <p><b>Phone:</b> {payment.phone || "—"}</p>
+            <p><b>Gender:</b> {payment.gender || "—"}</p>
           </div>
 
           <div className="card">
             <h4>Payment Cycle</h4>
             <p>Current Payment Cycle</p>
-
             <span className="current">Current</span>
           </div>
         </div>
 
         {/* SUMMARY */}
         <div className="summary-card">
-          <p>
-            <b>Total:</b> ₹{selectedSummary.total}
-          </p>
-          <p>
-            <b>Paid:</b> ₹{selectedSummary.paid}
-          </p>
+          <p><b>Total:</b> ₹{selectedSummary.total}</p>
+          <p><b>Paid:</b> ₹{selectedSummary.paid}</p>
           <p className="due">
-            <b>{selectedSummary.due === 0 ? "Due:" : "Remaining:"}</b> ₹
-            {selectedSummary.due}
+            <b>{selectedSummary.due === 0 ? "Due:" : "Remaining:"}</b> ₹{selectedSummary.due}
           </p>
         </div>
 
@@ -192,11 +177,7 @@ const PaymentInfoModal = ({
         >
           <div className="txn-main">
             <p className="txn-title">Current Month</p>
-
-            <p>
-              ₹{pendingTxn ? pendingTxn.amount : remaining}
-
-            </p>
+            <p>₹{pendingTxn ? pendingTxn.amount : remaining}</p>
 
             <p className="muted">
               {pendingTxn

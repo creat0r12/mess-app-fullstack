@@ -7,6 +7,8 @@ import "../../styles/AdminLogin.css";
 function AdminLogin() {
   const navigate = useNavigate();
 
+  const API = import.meta.env.VITE_API_URL;
+
   const [identifier, setIdentifier] = useState(""); // email / phone / username
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -19,7 +21,7 @@ function AdminLogin() {
 
     try {
       const res = await axios.post(
-        `${import.meta.env.VITE_API_URL}/api/auth/admin-login",
+        `${API}/api/auth/admin-login`,
         {
           identifier, // ✅ email OR phone OR username
           password,

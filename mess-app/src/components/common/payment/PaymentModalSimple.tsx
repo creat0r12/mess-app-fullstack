@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import "../../../styles/paymentModalSimple.css";
 import PaymentCard from "./PaymentCard";
 
-
 type Payment = {
     id: number;
     membership_id: number;
@@ -19,15 +18,13 @@ type Props = {
 };
 
 const PaymentModalSimple = ({ role = "student", onClose, payment }: Props) => {
+    const API = import.meta.env.VITE_API_URL;
+
     /* ================= STATE ================= */
     const [amount, setAmount] = useState("");
     const [file, setFile] = useState<File | null>(null);
-
-
-
     const [payments, setPayments] = useState<Payment[]>([]);
     const token = localStorage.getItem("token");
-
 
     /* ================= ACTIONS ================= */
 
@@ -43,7 +40,7 @@ const PaymentModalSimple = ({ role = "student", onClose, payment }: Props) => {
             formData.append("proof", file);
 
             const res = await fetch(
-                `${import.meta.env.VITE_API_URL}/api/payments/simple/upload",
+                `${API}/api/payments/simple/upload`,
                 {
                     method: "POST",
                     headers: {
@@ -60,12 +57,10 @@ const PaymentModalSimple = ({ role = "student", onClose, payment }: Props) => {
                 return;
             }
 
-            // ✅ Success message
             alert("Payment submitted successfully");
 
-            // 🔄 Refresh list
             const refreshed = await fetch(
-                `${import.meta.env.VITE_API_URL}/api/payments/simple/my",
+                `${API}/api/payments/simple/my`,
                 {
                     headers: { Authorization: `Bearer ${token}` },
                 }
@@ -74,7 +69,6 @@ const PaymentModalSimple = ({ role = "student", onClose, payment }: Props) => {
             const newData = await refreshed.json();
             setPayments(newData || []);
 
-            // 🔄 Reset form
             setAmount("");
             setFile(null);
 
@@ -86,7 +80,7 @@ const PaymentModalSimple = ({ role = "student", onClose, payment }: Props) => {
 
     const handleAccept = async (id: number) => {
         const res = await fetch(
-            `${import.meta.env.VITE_API_URL}`/api/payments/simple/${id}`,
+            `${API}/api/payments/simple/${id}`,
             {
                 method: "PUT",
                 headers: {
@@ -103,7 +97,7 @@ const PaymentModalSimple = ({ role = "student", onClose, payment }: Props) => {
         }
 
         const refreshed = await fetch(
-            `${import.meta.env.VITE_API_URL}/api/payments/simple",
+            `${API}/api/payments/simple`,
             {
                 headers: { Authorization: `Bearer ${token}` },
             }
@@ -120,7 +114,7 @@ const PaymentModalSimple = ({ role = "student", onClose, payment }: Props) => {
 
     const handleReject = async (id: number) => {
         const res = await fetch(
-            `${import.meta.env.VITE_API_URL}`/api/payments/simple/${id}`,
+            `${API}/api/payments/simple/${id}`,
             {
                 method: "PUT",
                 headers: {
@@ -137,7 +131,7 @@ const PaymentModalSimple = ({ role = "student", onClose, payment }: Props) => {
         }
 
         const refreshed = await fetch(
-            `${import.meta.env.VITE_API_URL}/api/payments/simple",
+            `${API}/api/payments/simple`,
             {
                 headers: { Authorization: `Bearer ${token}` },
             }
@@ -154,7 +148,7 @@ const PaymentModalSimple = ({ role = "student", onClose, payment }: Props) => {
 
     const handleCancel = async (id: number) => {
         await fetch(
-            `${import.meta.env.VITE_API_URL}`/api/payments/simple/cancel/${id}`,
+            `${API}/api/payments/simple/cancel/${id}`,
             {
                 method: "PUT",
                 headers: {
@@ -164,7 +158,7 @@ const PaymentModalSimple = ({ role = "student", onClose, payment }: Props) => {
         );
 
         const refreshed = await fetch(
-            `${import.meta.env.VITE_API_URL}/api/payments/simple/my",
+            `${API}/api/payments/simple/my`,
             {
                 headers: { Authorization: `Bearer ${token}` },
             }
@@ -174,13 +168,11 @@ const PaymentModalSimple = ({ role = "student", onClose, payment }: Props) => {
         setPayments(newData || []);
     };
 
-
-
     useEffect(() => {
         if (!token) return;
 
         if (role === "admin" && payment) {
-            fetch(`${import.meta.env.VITE_API_URL}`/api/payments/simple`, {
+            fetch(`${API}/api/payments/simple`, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
@@ -193,7 +185,7 @@ const PaymentModalSimple = ({ role = "student", onClose, payment }: Props) => {
                     setPayments(filtered || []);
                 });
         } else {
-            fetch(`${import.meta.env.VITE_API_URL}/api/payments/simple/my", {
+            fetch(`${API}/api/payments/simple/my`, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },

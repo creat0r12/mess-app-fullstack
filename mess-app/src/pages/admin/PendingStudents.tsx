@@ -15,7 +15,7 @@ type PendingMembership = {
   created_at?: string;
 };
 
-const API_ROOT = `${import.meta.env.VITE_API_URL}";
+const API_ROOT = import.meta.env.VITE_API_URL;
 
 const PendingStudents = () => {
   const [students, setStudents] = useState<PendingMembership[]>([]);
@@ -79,7 +79,7 @@ const PendingStudents = () => {
 
     try {
       const res = await fetch(
-        `${API_ROOT}/api/admin/${endpoint}/${membershipId}`,  // ✅ comma added
+        `${API_ROOT}/api/admin/${endpoint}/${membershipId}`,
         {
           method: "PUT",
           headers: {
@@ -120,7 +120,6 @@ const PendingStudents = () => {
     }, {})
   );
 
-
   return (
     <div className="pending-page">
       <h2 className="page-title">Pending Student Requests</h2>
@@ -145,7 +144,6 @@ const PendingStudents = () => {
               {s.meal_slot && (
                 <p>
                   <strong>Meal:</strong> {s.meal_slots.join(" + ")}
-
                 </p>
               )}
 
@@ -171,7 +169,6 @@ const PendingStudents = () => {
               >
                 Approve
               </button>
-
 
               <button
                 className="btn reject"

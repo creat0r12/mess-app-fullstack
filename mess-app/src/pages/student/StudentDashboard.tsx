@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import "../../styles/studentDashboard.css";
 import PaymentModalSimple from "../../components/common/payment/PaymentModalSimple";
-const API = `${import.meta.env.VITE_API_URL}";
 
+const API = import.meta.env.VITE_API_URL;
 
 type LeaveStatus =
   | "PENDING"
@@ -20,14 +20,10 @@ const StudentDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [showPaymentPopup, setShowPaymentPopup] = useState(false);
 
-  // 🔹 LEAVE STATES
   const [leaveDate, setLeaveDate] = useState("");
   const [leaveReason, setLeaveReason] = useState("");
   const [leaveStatus, setLeaveStatus] = useState<LeaveStatus | null>(null);
   const [leaveLoading, setLeaveLoading] = useState(false);
-
-
-
 
   const hasLeaveRequest =
     leaveStatus === "PENDING" ||
@@ -41,8 +37,7 @@ const StudentDashboard = () => {
       return;
     }
 
-    // we no longer depend on localStorage "student"
-    setStudent({}); // dummy just to allow dashboard
+    setStudent({});
     setLoading(false);
   }, [token]);
 
@@ -140,9 +135,6 @@ const StudentDashboard = () => {
     }
   };
 
-
-
-
   if (loading) return <p>Loading...</p>;
   if (!student) return <p>Please login again</p>;
 
@@ -150,10 +142,8 @@ const StudentDashboard = () => {
     <div className="student-dashboard">
       <h2 className="welcome">Welcome, {student.name}</h2>
 
-      {/* 💳 PAYMENT BLOCK */}
       <div className="card">
         <h3>Your Payment</h3>
-
         <button
           className="pay-btn"
           onClick={() => setShowPaymentPopup(true)}
@@ -162,9 +152,6 @@ const StudentDashboard = () => {
         </button>
       </div>
 
-
-
-      {/* 🍽️ MESS INFO + MENU */}
       <div className="card">
         <h3>Mess Information</h3>
 
@@ -194,7 +181,6 @@ const StudentDashboard = () => {
         )}
       </div>
 
-      {/* 📝 LEAVE REQUEST */}
       <div className="card">
         <h3>Leave Request</h3>
 
@@ -207,7 +193,6 @@ const StudentDashboard = () => {
               </span>
             </p>
 
-            {/* ACTIVE STATES */}
             {leaveStatus === "PENDING" && (
               <p className="muted">Waiting for admin approval ⏳</p>
             )}
@@ -243,7 +228,6 @@ const StudentDashboard = () => {
               </>
             )}
 
-            {/* NON-BLOCKING STATES */}
             {leaveStatus === "REJECTED" && (
               <p className="error-msg">
                 Leave rejected ❌ — You can apply again
@@ -294,7 +278,6 @@ const StudentDashboard = () => {
         )}
       </div>
 
-      {/* 💳 PAYMENT POPUP */}
       {showPaymentPopup && (
         <PaymentModalSimple
           role="student"

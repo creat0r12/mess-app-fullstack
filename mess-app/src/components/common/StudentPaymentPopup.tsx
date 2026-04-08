@@ -1,7 +1,7 @@
 import { useState } from "react";
 import "../../styles/StudentPaymentPopup.css";
 
-const API = `${import.meta.env.VITE_API_URL}";
+const API = import.meta.env.VITE_API_URL;
 
 type Props = {
   mess_id: number;
