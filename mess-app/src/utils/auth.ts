@@ -12,7 +12,7 @@ export const isAdminLoggedIn = () => {
   const token = localStorage.getItem("token");
   const role = localStorage.getItem("role");
 
-  return Boolean(token && role === "MESS_ADMIN");
+  return Boolean(token && (role === "MESS_ADMIN" || role === "PLATFORM_ADMIN"));
 };
 
 

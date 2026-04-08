@@ -8,9 +8,17 @@ const app = express();
 /* =========================
    GLOBAL MIDDLEWARES
 ========================= */
-app.use(cors({
-  origin: "*", // later we can restrict to frontend URL
-}));
+
+// ✅ CLEAN & STABLE CORS
+const corsOptions = {
+  origin: [
+    "http://localhost:5173",
+    "https://mess-app-fullstack-1.onrender.com"
+  ],
+  credentials: true
+};
+
+app.use(cors(corsOptions)); // ✅ enough (handles preflight automatically)
 
 app.use(express.json());
 app.use("/uploads", express.static("uploads"));
@@ -54,7 +62,7 @@ app.get("/api/protected", authenticate, (req, res) => {
 });
 
 /* =========================
-   GLOBAL ERROR HANDLER (NEW 🔥)
+   GLOBAL ERROR HANDLER
 ========================= */
 app.use((err, req, res, next) => {
   console.error("❌ Server Error:", err);

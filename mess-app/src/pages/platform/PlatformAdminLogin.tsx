@@ -16,7 +16,7 @@ const PlatformAdminLogin = () => {
 
         try {
             const res = await axios.post(
-                `${API}/api/admin/platform-admin/login`,
+                `${API}/api/auth/platform-login`,
                 { email, password }
             );
 
