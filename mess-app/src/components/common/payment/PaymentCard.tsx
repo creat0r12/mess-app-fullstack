@@ -1,4 +1,4 @@
-import "../../../styles/paymentCard.css";
+import styles from "../../../styles/paymentCard.module.css";
 import { useState } from "react";
 
 type Payment = {
@@ -7,8 +7,9 @@ type Payment = {
     status: "PENDING" | "APPROVED" | "REJECTED" | "CANCELLED";
     proof_url?: string | null;
     created_at: string;
-    method?: string;   // ✅ ADD THIS
+    method?: string;
 };
+
 type Props = {
     payment: Payment;
     role: "student" | "admin";
@@ -17,9 +18,7 @@ type Props = {
     onCancel?: (id: number) => void;
 };
 
-const API = "http://localhost:5000";
-
-
+const API = `${import.meta.env.VITE_API_URL}";
 
 const PaymentCard = ({
     payment,
@@ -32,74 +31,99 @@ const PaymentCard = ({
 
     return (
         <>
-            <div className={`payment-card ${payment.status === "PENDING" ? "highlight" : ""}`}>
+            <div
+                className={`${styles["payment-card"]} ${
+                    payment.status === "PENDING" ? styles.highlight : ""
+                }`}
+            >
                 {/* LEFT - IMAGE */}
-                <div className="proof">
+                <div className={styles.proof}>
                     {payment.proof_url ? (
                         <img
                             src={`${API}${payment.proof_url}`}
-                            onClick={() => setPreview(`${API}${payment.proof_url}`)}
+                            onClick={() =>
+                                setPreview(`${API}${payment.proof_url}`)
+                            }
                             style={{ cursor: "pointer" }}
                         />
                     ) : (
-                        <div className="no-img">No Proof</div>
+                        <div className={styles["no-img"]}>No Proof</div>
                     )}
                 </div>
 
                 {/* RIGHT - DETAILS */}
-                <div className="details">
-                    <p className="amount">₹{payment.amount}</p>
+                <div className={styles.details}>
+                    <p className={styles.amount}>₹{payment.amount}</p>
 
-                    <p className="date">
+                    <p className={styles.date}>
                         {new Date(payment.created_at).toLocaleString()}
                     </p>
 
-                    <p className="method">
+                    <p className={styles.method}>
                         Method: {payment.method || "Cash / UPI"}
                     </p>
 
-                    <span className={`status ${payment.status?.toLowerCase()}`}>
-                        {payment.status === "PENDING" ? "Pending Approval" :
-                            payment.status === "APPROVED" ? "Approved" :
-                                payment.status === "REJECTED" ? "Rejected" :
-                                    payment.status === "CANCELLED" ? "Cancelled" :
-                                        payment.status}
+                    <span
+                        className={`${styles.status} ${
+                            styles[payment.status.toLowerCase()]
+                        }`}
+                    >
+                        {payment.status === "PENDING"
+                            ? "Pending Approval"
+                            : payment.status === "APPROVED"
+                            ? "Approved"
+                            : payment.status === "REJECTED"
+                            ? "Rejected"
+                            : payment.status === "CANCELLED"
+                            ? "Cancelled"
+                            : payment.status}
                     </span>
 
-                    <div className="actions">
-                        {role === "student" && payment.status === "PENDING" && (
-                            <button
-                                className="cancel-btn"
-                                onClick={() => onCancel?.(payment.id)}
-                            >
-                                Cancel
-                            </button>
-                        )}
-
-                        {role === "admin" && payment.status === "PENDING" && (
-                            <>
+                    <div className={styles.actions}>
+                        {role === "student" &&
+                            payment.status === "PENDING" && (
                                 <button
-                                    className="accept-btn"
-                                    onClick={() => onAccept?.(payment.id)}
+                                    className={styles["cancel-btn"]}
+                                    onClick={() =>
+                                        onCancel?.(payment.id)
+                                    }
                                 >
-                                    Accept
+                                    Cancel
                                 </button>
+                            )}
 
-                                <button
-                                    className="reject-btn"
-                                    onClick={() => onReject?.(payment.id)}
-                                >
-                                    Reject
-                                </button>
-                            </>
-                        )}
+                        {role === "admin" &&
+                            payment.status === "PENDING" && (
+                                <>
+                                    <button
+                                        className={styles["accept-btn"]}
+                                        onClick={() =>
+                                            onAccept?.(payment.id)
+                                        }
+                                    >
+                                        Accept
+                                    </button>
+
+                                    <button
+                                        className={styles["reject-btn"]}
+                                        onClick={() =>
+                                            onReject?.(payment.id)
+                                        }
+                                    >
+                                        Reject
+                                    </button>
+                                </>
+                            )}
                     </div>
                 </div>
             </div>
 
             {/* IMAGE PREVIEW */}
             {preview && (
-                <div className="img-preview" onClick={() => setPreview(null)}>
+                <div
+                    className={styles["img-preview"]}
+                    onClick={() => setPreview(null)}
+                >
                     <img src={preview} />
                 </div>
             )}

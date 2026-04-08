@@ -11,7 +11,7 @@ type Student = {
   joined_at?: string;
 };
 
-const API_ROOT = "http://localhost:5000";
+const API_ROOT = `${import.meta.env.VITE_API_URL}";
 
 const ActiveStudents = () => {
   const [students, setStudents] = useState<Student[]>([]);

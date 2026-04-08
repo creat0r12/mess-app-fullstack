@@ -51,19 +51,19 @@ exports.approveStudent = (req, res) => {
     return res.status(403).json({ message: "Mess not linked to admin" });
   }
 
-  // 1️⃣ Get membership + user gender
+  // 1️⃣ Get membership + user details
   const getSql = `
   SELECT 
     smm.id AS membership_id,
     smm.user_id,
     smm.mess_id,
-    smm.gender
+    smm.gender,
+    smm.meal_slot
   FROM student_mess_membership smm
   WHERE smm.id = ?
     AND smm.mess_id = ?
     AND smm.status = 'PENDING'
-`;
-
+  `;
 
   db.query(getSql, [membershipId, messId], (err, rows) => {
     if (err) {
@@ -77,37 +77,7 @@ exports.approveStudent = (req, res) => {
       });
     }
 
-    const { user_id, gender } = rows[0];
-
-    // ✅ Ensure user exists (GLOBAL IDENTITY)
-    db.query(
-      "SELECT id FROM users WHERE id = ?",
-      [user_id],
-      (errU, users) => {
-        if (errU) {
-          console.error("User check error:", errU);
-          return res.status(500).json({ message: "User check failed" });
-        }
-
-        // If user does not exist, create minimal user
-        if (users.length === 0) {
-          db.query(
-            `
-        INSERT INTO users (id, role)
-        VALUES (?, 'STUDENT')
-        `,
-            [user_id],
-            (errCreate) => {
-              if (errCreate) {
-                console.error("User creation error:", errCreate);
-                return res.status(500).json({ message: "User creation failed" });
-              }
-            }
-          );
-        }
-      }
-    );
-
+    const { gender, meal_slot } = rows[0];
 
     // 2️⃣ Approve membership
     db.query(
@@ -126,64 +96,104 @@ exports.approveStudent = (req, res) => {
         // 3️⃣ Fetch payment settings
         db.query(
           `
-          SELECT boys_monthly_amount, girls_monthly_amount
+          SELECT 
+            boys_one_time,
+            boys_two_time,
+            girls_one_time,
+            girls_two_time
           FROM payment_settings
-          WHERE id = 1
+          WHERE mess_id = ?
           `,
+          [messId],
           (err3, settings) => {
             if (err3 || settings.length === 0) {
               console.error("Payment settings error:", err3);
               return res.status(500).json({ message: "Payment config error" });
             }
 
-            // ✅ Gender-based pricing (business rule preserved)
-            const amount =
-              gender === "FEMALE"
-                ? settings[0].girls_monthly_amount
-                : settings[0].boys_monthly_amount;
+            // 4️⃣ Calculate amount
+            let amount;
 
-            // 4️⃣ Create first payment (MESS + MEMBERSHIP SCOPED)
+            if (gender === "FEMALE") {
+              amount =
+                meal_slot === "DINNER"
+                  ? settings[0].girls_two_time
+                  : settings[0].girls_one_time;
+            } else {
+              amount =
+                meal_slot === "DINNER"
+                  ? settings[0].boys_two_time
+                  : settings[0].boys_one_time;
+            }
+
+            // 5️⃣ Prepare payment cycle
             const now = new Date();
             const month = now.toLocaleString("default", { month: "long" });
             const year = now.getFullYear();
 
+            // 🔍 Check duplicate payment
             db.query(
               `
-  INSERT INTO payments
-  (
-    mess_id,
-    membership_id,
-    amount,
-    paid_amount,
-    due_amount,
-    payment_month,
-    payment_year,
-    status
-  )
-  VALUES (?, ?, ?, 0, ?, ?, ?, 'DUE')
-  `,
-              [
-                messId,
-                membershipId,
-                amount,
-                amount,
-                month,
-                year,
-              ],
-              (err4) => {
-                if (err4) {
-                  console.error("Payment creation error:", err4);
-                  return res.status(500).json({
-                    message: "Membership approved but payment creation failed",
+              SELECT id FROM payments
+              WHERE membership_id = ?
+                AND payment_month = ?
+                AND payment_year = ?
+              `,
+              [membershipId, month, year],
+              (errCheck, existing) => {
+                if (errCheck) {
+                  console.error("Payment check error:", errCheck);
+                  return res.status(500).json({ message: "DB error" });
+                }
+
+                // 🚫 Prevent duplicate
+                if (existing.length > 0) {
+                  return res.json({
+                    message: "Already approved (payment exists)",
                   });
                 }
 
-                res.json({
-                  message: "Student approved and payment cycle created",
-                });
+                // 6️⃣ Insert payment
+                db.query(
+                  `
+                  INSERT INTO payments
+                  (
+                    mess_id,
+                    membership_id,
+                    amount,
+                    paid_amount,
+                    due_amount,
+                    payment_month,
+                    payment_year,
+                    status
+                  )
+                  VALUES (?, ?, ?, 0, ?, ?, ?, 'DUE')
+                  `,
+                  [
+                    messId,
+                    membershipId,
+                    amount,
+                    amount,
+                    month,
+                    year,
+                  ],
+                  (err4) => {
+                    if (err4) {
+                      console.error("Payment creation error:", err4);
+                      return res.status(500).json({
+                        message:
+                          "Membership approved but payment creation failed",
+                      });
+                    }
+
+                    res.json({
+                      message:
+                        "Student approved and payment cycle created",
+                    });
+                  }
+                );
               }
             );
-
           }
         );
       }
@@ -274,10 +284,16 @@ exports.getActiveStudents = (req, res) => {
 ========================= */
 exports.deactivateStudent = (req, res) => {
   const { id } = req.params;
+  const messId = req.user.mess_id;
 
   db.query(
-    "UPDATE students SET status='INACTIVE' WHERE id=?",
-    [id],
+    `
+    UPDATE student_mess_membership
+    SET status = 'INACTIVE'
+    WHERE id = ?
+      AND mess_id = ?
+    `,
+    [id, messId],
     (err) => {
       if (err) {
         console.error("Deactivate student error:", err);
@@ -387,7 +403,8 @@ exports.updatePaymentSettings = (req, res) => {
   } = req.body;
 
   const messId = req.user.mess_id;
-  const qrImage = req.file ? req.file.filename : null;
+  const removeImage = req.body.remove_image === "1";
+  const image = req.file ? req.file.filename : null;
 
   // ✅ SAFE NUMBER FUNCTION (VERY IMPORTANT)
   const safeNumber = (val) => {
@@ -435,7 +452,10 @@ exports.updatePaymentSettings = (req, res) => {
         boys_two_time = ?,
         girls_one_time = ?,
         girls_two_time = ?,
-        qr_image = COALESCE(?, qr_image)
+        qr_image = CASE 
+  WHEN ? = 1 THEN NULL 
+  ELSE COALESCE(?, qr_image) 
+END
       WHERE mess_id = ?
       `,
       [
@@ -446,7 +466,8 @@ exports.updatePaymentSettings = (req, res) => {
         safeNumber(boys_two_time),   // ✅ FIXED
         safeNumber(girls_one_time),  // ✅ FIXED
         safeNumber(girls_two_time),  // ✅ FIXED
-        qrImage,
+        removeImage ? 1 : 0,
+        image,
         messId,
       ],
       (err) => {

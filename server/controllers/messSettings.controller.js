@@ -57,12 +57,11 @@ exports.getMessSettings = (req, res) => {
    UPDATE MESS SETTINGS (ADMIN)
 ========================= */
 exports.updateMessSettings = (req, res) => {
-
+  const removeImage = req.body.remove_image === "1";
   const { mess_open, notice, menu } = req.body;
 
   let image_url = null;
 
-  // If admin uploads a new image
   if (req.file) {
     image_url = `/uploads/mess/${req.file.filename}`;
   }
@@ -73,18 +72,27 @@ exports.updateMessSettings = (req, res) => {
       mess_open = ?,
       notice = ?,
       menu = ?,
-      image_url = COALESCE(?, image_url),
+      image_url = CASE 
+       WHEN ? = 1 THEN NULL
+       ELSE COALESCE(?, image_url)
+      END,
       updated_at = NOW()
     WHERE id = 1
   `;
 
   const safeMessOpen =
-  mess_open !== undefined ? Number(mess_open) : 0;
+    mess_open !== undefined ? Number(mess_open) : 0;
 
-db.query(
-  query,
-  [safeMessOpen, notice || "", menu || "", image_url],
-  (err) => {
+  db.query(
+    query,
+    [
+      safeMessOpen,
+      notice || "",
+      menu || "",
+      removeImage ? 1 : 0,
+      image_url
+    ],
+    (err) => {
 
       if (err) {
         console.error("Mess settings update error:", err);

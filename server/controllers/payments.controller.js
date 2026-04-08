@@ -76,7 +76,7 @@ exports.acceptTransaction = (req, res) => {
 /* =========================
    REJECT PAYMENT (ADMIN)
 ========================= */
-exports.rejectTransaction  = (req, res) => {
+exports.rejectTransaction = (req, res) => {
   const { transactionId } = req.params;
   const adminId = req.user.id;
 
@@ -149,22 +149,22 @@ exports.submitPayment = (req, res) => {
   const proofUrl = `/uploads/payments/${req.file.filename}`;
 
   db.query(
-  `
+    `
   INSERT INTO payment_transactions
     (membership_id, amount, proof_url, status)
   VALUES
     (?, ?, ?, 'PENDING')
   `,
-  [req.user.membership_id, paid_amount, proofUrl],
-  (err) => {
-    if (err) {
-      console.error("SUBMIT PAYMENT ERROR:", err);
-      return res.status(500).json({ message: "DB error" });
-    }
+    [req.user.membership_id, paid_amount, proofUrl],
+    (err) => {
+      if (err) {
+        console.error("SUBMIT PAYMENT ERROR:", err);
+        return res.status(500).json({ message: "DB error" });
+      }
 
-    res.json({ message: "Payment submitted successfully and pending admin approval" });
-  }
-);
+      res.json({ message: "Payment submitted successfully and pending admin approval" });
+    }
+  );
 
 };
 
@@ -374,6 +374,8 @@ exports.cancelPendingPayment = (req, res) => {
    ADMIN: PENDING PAYMENT TRANSACTIONS
 ========================= */
 exports.getPendingTransactions = (req, res) => {
+  const adminId = req.user.id;
+
   db.query(
     `
     SELECT
@@ -381,21 +383,20 @@ exports.getPendingTransactions = (req, res) => {
       t.amount,
       t.proof_url,
       t.submitted_at,
-      m.id AS membership_id,
       u.name AS student_name,
       u.phone
     FROM payment_transactions t
     JOIN student_mess_membership m ON m.id = t.membership_id
     JOIN users u ON u.id = m.user_id
+    JOIN messes ms ON ms.id = m.mess_id
     WHERE t.status = 'PENDING'
+      AND ms.owner_user_id = ?
     ORDER BY t.submitted_at DESC
     `,
+    [adminId],
     (err, rows) => {
-      if (err) {
-        console.error("PENDING TXN ERROR:", err);
-        return res.status(500).json({ message: "DB error" });
-      }
-      res.json(rows || []);
+      if (err) return res.status(500).json({ message: "DB error" });
+      res.json(rows);
     }
   );
 };
@@ -403,6 +404,8 @@ exports.getPendingTransactions = (req, res) => {
    ADMIN: ALL PAYMENTS (HISTORY)
 ========================= */
 exports.getAllPayments = (req, res) => {
+  const adminId = req.user.id;
+
   db.query(
     `
     SELECT
@@ -411,21 +414,19 @@ exports.getAllPayments = (req, res) => {
       p.paid_amount,
       p.due_amount,
       p.status,
-      p.payment_month,
-      p.payment_year,
       u.name AS student_name,
       u.phone
     FROM payments p
     JOIN student_mess_membership m ON m.id = p.membership_id
     JOIN users u ON u.id = m.user_id
-    ORDER BY p.payment_year DESC, p.id DESC
+    JOIN messes ms ON ms.id = m.mess_id
+    WHERE ms.owner_user_id = ?
+    ORDER BY p.id DESC
     `,
+    [adminId],
     (err, rows) => {
-      if (err) {
-        console.error("ALL PAYMENTS ERROR:", err);
-        return res.status(500).json({ message: "DB error" });
-      }
-      res.json(rows || []);
+      if (err) return res.status(500).json({ message: "DB error" });
+      res.json(rows);
     }
   );
 };
@@ -436,68 +437,82 @@ exports.getAllPayments = (req, res) => {
 // =========================
 
 exports.uploadSimplePayment = (req, res) => {
-  const { amount, mess_id } = req.body;
+  const { amount } = req.body;
 
   if (!req.file) {
     return res.status(400).json({ message: "Proof required" });
   }
 
-  // 🔹 Check payment mode
+  const membershipId = req.user.membership_id;
+
+  // 🔹 Get mess_id from membership (IMPORTANT)
   db.query(
-    "SELECT payment_mode FROM messes WHERE id = ?",
-    [mess_id],
+    "SELECT mess_id FROM student_mess_membership WHERE id = ?",
+    [membershipId],
     (err, rows) => {
       if (err || !rows.length) {
-        return res.status(500).json({ message: "Mess not found" });
+        return res.status(500).json({ message: "Membership not found" });
       }
 
-      const mode = rows[0].payment_mode;
+      const mess_id = rows[0].mess_id;
 
-      // ❌ If ADVANCED → block simple payment
-      if (mode === "ADVANCED") {
-        return res.status(400).json({
-          message: "Advanced payment system enabled for this mess",
-        });
-      }
-
-      const proofUrl = `/uploads/payments/${req.file.filename}`;
-
+      // 🔹 Check payment mode
       db.query(
-        `
-        INSERT INTO payments_simple (user_id, mess_id, amount, proof_url)
-        VALUES (?, ?, ?, ?)
-        `,
-        [req.user.id, mess_id, amount || null, proofUrl],
-        (err2) => {
-          if (err2) {
-            console.error(err2);
-            return res.status(500).json({ message: "DB error" });
+        "SELECT payment_mode FROM messes WHERE id = ?",
+        [mess_id],
+        (err2, rows2) => {
+          if (err2 || !rows2.length) {
+            return res.status(500).json({ message: "Mess not found" });
           }
 
-          res.json({ message: "Payment submitted" });
+          const mode = rows2[0].payment_mode;
+
+          // ❌ If ADVANCED → block simple payment
+          if (mode === "ADVANCED") {
+            return res.status(400).json({
+              message: "Advanced payment system enabled for this mess",
+            });
+          }
+
+          const proofUrl = `/uploads/payments/${req.file.filename}`;
+
+          // ✅ INSERT using membership_id
+          db.query(
+            `
+            INSERT INTO payments_simple (membership_id, mess_id, amount, proof_url)
+            VALUES (?, ?, ?, ?)
+            `,
+            [membershipId, mess_id, amount || null, proofUrl],
+            (err3) => {
+              if (err3) {
+                console.error(err3);
+                return res.status(500).json({ message: "DB error" });
+              }
+
+              res.json({ message: "Payment submitted" });
+            }
+          );
         }
       );
     }
   );
 };
 
-exports.getSimplePayments = (req, res) => {
+exports.getMySimplePayments = (req, res) => {
   db.query(
     `
-    SELECT 
-      p.id,
-      p.amount,
-      p.status,
-      p.proof_url,
-      p.created_at,
-      u.name AS student_name
-    FROM payments_simple p
-    JOIN users u ON u.id = p.user_id
-    ORDER BY p.created_at DESC
+    SELECT id, amount, status, proof_url, created_at, membership_id
+    FROM payments_simple
+    WHERE membership_id = ?
+    ORDER BY created_at DESC
     `,
+    [req.user.membership_id],
     (err, rows) => {
-      if (err) return res.status(500).json({ message: "DB error" });
-      res.json(rows);
+      if (err) {
+        console.error(err); // 🔥 ADD THIS
+        return res.status(500).json({ message: "DB error" });
+      }
+      res.json(rows || []);
     }
   );
 };
@@ -517,21 +532,7 @@ exports.updateSimplePayment = (req, res) => {
   );
 };
 
-exports.getMySimplePayments = (req, res) => {
-  db.query(
-    `
-    SELECT id, amount, status, proof_url, created_at
-    FROM payments_simple
-    WHERE user_id = ?
-    ORDER BY created_at DESC
-    `,
-    [req.user.id],
-    (err, rows) => {
-      if (err) return res.status(500).json({ message: "DB error" });
-      res.json(rows);
-    }
-  );
-};
+
 
 
 exports.cancelSimplePayment = (req, res) => {
@@ -541,9 +542,9 @@ exports.cancelSimplePayment = (req, res) => {
     `
     UPDATE payments_simple
     SET status = 'CANCELLED'
-    WHERE id = ? AND user_id = ? AND status = 'PENDING'
+    WHERE id = ? AND membership_id = ? AND status = 'PENDING'
     `,
-    [id, req.user.id],
+    [id, req.user.membership_id],
     (err, result) => {
       if (err) return res.status(500).json({ message: "DB error" });
 
@@ -559,6 +560,8 @@ exports.cancelSimplePayment = (req, res) => {
 
 
 exports.getRecentSimplePayments = (req, res) => {
+  const adminId = req.user.id;
+
   db.query(
     `
     SELECT 
@@ -566,17 +569,52 @@ exports.getRecentSimplePayments = (req, res) => {
       p.amount,
       p.status,
       p.created_at,
+      p.proof_url,
       u.name AS student_name
     FROM payments_simple p
-    JOIN users u ON u.id = p.user_id
+    JOIN student_mess_membership m ON m.id = p.membership_id
+    JOIN users u ON u.id = m.user_id
+    JOIN messes ms ON ms.id = m.mess_id
+    WHERE ms.owner_user_id = ?
     ORDER BY p.created_at DESC
     LIMIT 10
     `,
+    [adminId],
     (err, rows) => {
       if (err) {
         console.error("RECENT SIMPLE PAYMENTS ERROR:", err);
         return res.status(500).json({ message: "DB error" });
       }
+      res.json(rows);
+    }
+  );
+};
+
+/* =========================
+   ADMIN: GET ALL SIMPLE PAYMENTS
+========================= */
+exports.getSimplePayments = (req, res) => {
+  const adminId = req.user.id;
+
+  db.query(
+    `
+    SELECT 
+      p.id,
+      p.amount,
+      p.status,
+      p.created_at,
+      p.proof_url,
+      u.name AS student_name
+    FROM payments_simple p
+    JOIN student_mess_membership m ON m.id = p.membership_id
+    JOIN users u ON u.id = m.user_id
+    JOIN messes ms ON ms.id = m.mess_id
+    WHERE ms.owner_user_id = ?
+    ORDER BY p.created_at DESC
+    `,
+    [adminId],
+    (err, rows) => {
+      if (err) return res.status(500).json({ message: "DB error" });
       res.json(rows);
     }
   );

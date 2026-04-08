@@ -3,7 +3,7 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import "../styles/findMess.css";
 
-const API = "http://localhost:5000";
+const API = `${import.meta.env.VITE_API_URL}";
 
 const FindMess = () => {
   const [messes, setMesses] = useState<any[]>([]);

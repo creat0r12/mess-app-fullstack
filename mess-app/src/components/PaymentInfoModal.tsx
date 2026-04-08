@@ -2,7 +2,7 @@ import { useState } from "react";
 import "../styles/paymentInfoModal.css";
 import type { PaymentHistory } from "../types/payment";
 
-const API = "http://localhost:5000";
+const API = `${import.meta.env.VITE_API_URL}";
 
 /* ================= TYPES ================= */
 

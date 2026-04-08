@@ -10,9 +10,11 @@ type MessSettingsType = {
   image_url: string | null;
 };
 
-const API = "http://localhost:5000";
+const API = `${import.meta.env.VITE_API_URL}";
 
 const MessSettings = () => {
+
+  const [removeImage, setRemoveImage] = useState(false);
 
   const token = localStorage.getItem("token");
   const headers = { Authorization: `Bearer ${token}` };
@@ -93,12 +95,17 @@ const MessSettings = () => {
         form.append("image", imageFile);
       }
 
+      // ✅ ADD THIS
+      if (removeImage) {
+        form.append("remove_image", "1");
+      }
+
       await axios.put(`${API}/api/mess-settings`, form, { headers });
 
       alert("Mess settings saved");
 
       setImageFile(null);
-
+      setRemoveImage(false);
     } catch (err) {
       console.error(err);
       alert("Save failed");
@@ -107,7 +114,6 @@ const MessSettings = () => {
       setSaving(false);
     }
   };
-
   if (loading) {
     return <p style={{ padding: "20px" }}>Loading...</p>;
   }
@@ -115,54 +121,7 @@ const MessSettings = () => {
   return (
     <div className="mess-settings-page">
 
-      {/* STATUS CARD */}
 
-      <div className="card">
-
-        <div className="row">
-
-          <div>
-            <h4>Mess Status</h4>
-            <p className="muted">ON / OFF</p>
-          </div>
-
-          <label className="switch">
-
-            <input
-              type="checkbox"
-              checked={messOpen}
-              onChange={async (e) => {
-
-                const value = e.target.checked;
-                setMessOpen(value);
-
-                try {
-
-                  const form = new FormData();
-                  form.append("mess_open", value ? "1" : "0");
-                  form.append("notice", notice);
-                  form.append("menu", menu);
-
-                  await axios.put(`${API}/api/mess-settings`, form, { headers });
-
-                } catch (err) {
-                  console.error("Toggle save failed", err);
-                }
-
-              }}
-            />
-
-            <span className="slider"></span>
-
-          </label>
-
-        </div>
-
-        <p className={`status-text ${messOpen ? "open" : "closed"}`}>
-          {messOpen ? "🟢 Mess is OPEN" : "🔴 Mess is CLOSED"}
-        </p>
-
-      </div>
 
 
       {/* SLIDE SECTION */}
@@ -205,18 +164,30 @@ const MessSettings = () => {
           <h4>Image (Optional)</h4>
 
           {imagePreview ? (
-            <img
-              src={imagePreview}
-              alt="Mess"
-              className={`image-preview ${isExpanded ? "expanded" : ""}`}
-              onClick={() => setIsExpanded(!isExpanded)}
-            />
+            <>
+              <img
+                src={imagePreview}
+                alt="Mess"
+                className={`image-preview ${isExpanded ? "expanded" : ""}`}
+                onClick={() => setIsExpanded(!isExpanded)}
+              />
+
+              <button
+                className="remove-btn"
+                onClick={() => {
+                  setImagePreview(null);
+                  setImageFile(null);
+                  setRemoveImage(true);   // 🔥 important
+                }}
+              >
+                Remove Image
+              </button>
+            </>
           ) : (
             <p className="muted">No image uploaded</p>
           )}
 
           <label className="upload-btn">
-
             Upload Image
 
             <input
@@ -227,7 +198,6 @@ const MessSettings = () => {
                 e.target.files && handleImageChange(e.target.files[0])
               }
             />
-
           </label>
 
         </div>

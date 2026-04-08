@@ -70,7 +70,7 @@ STATUS TEXT
 
 
 /* ===============================
-TOGGLE SWITCH (slightly smaller)
+TOGGLE SWITCH (small)
 ================================ */
 
 .switch {
@@ -113,16 +113,16 @@ TOGGLE SWITCH (slightly smaller)
 
 
 /* ===============================
-INPUT (single line)
+INPUT (compact)
 ================================ */
 
 input[type="text"] {
   width: 100%;
-  padding: 8px;
+  padding: 6px 8px;      /* 🔥 smaller */
   border-radius: 8px;
   border: 1px solid #ddd;
   font-size: 12px;
-  margin-top: 6px;
+  margin-top: 4px;
 }
 
 input[type="text"]:focus {
@@ -131,10 +131,14 @@ input[type="text"]:focus {
 }
 
 
+/* ===============================
+NOTICE + MENU (tight grid)
+================================ */
+
 .row-two {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 8px;
+  gap: 6px;              /* 🔥 reduced gap */
 }
 
 @media (max-width: 380px) {
@@ -142,13 +146,15 @@ input[type="text"]:focus {
     grid-template-columns: 1fr;
   }
 }
+
+
 /* ===============================
-IMAGE PREVIEW (small)
+IMAGE PREVIEW (small → expand)
 ================================ */
 
 .image-preview {
   width: 100%;
-  max-height: 100px;
+  max-height: 80px;      /* 🔥 smaller */
   object-fit: cover;
   border-radius: 8px;
   margin-top: 6px;
@@ -157,7 +163,7 @@ IMAGE PREVIEW (small)
 }
 
 .image-preview.expanded {
-  max-height: 300px;
+  max-height: 250px;     /* 🔥 expand on click */
 }
 
 
@@ -167,8 +173,8 @@ UPLOAD BUTTON (compact)
 
 .upload-btn {
   display: inline-block;
-  margin-top: 8px;
-  padding: 8px 12px;
+  margin-top: 6px;
+  padding: 6px 10px;     /* 🔥 smaller */
   border-radius: 8px;
   background: #3498db;
   color: white;
@@ -215,4 +221,16 @@ SLIDE SECTION (tight spacing)
 .mess-details.show {
   max-height: 1000px;
   opacity: 1;
+
+}
+
+.remove-btn {
+  margin-top: 6px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: none;
+  background: #ef4444;
+  color: white;
+  font-size: 12px;
+  cursor: pointer;
 }

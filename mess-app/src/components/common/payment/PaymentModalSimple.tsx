@@ -5,6 +5,7 @@ import PaymentCard from "./PaymentCard";
 
 type Payment = {
     id: number;
+    membership_id: number;
     amount: number;
     status: "PENDING" | "APPROVED" | "REJECTED" | "CANCELLED";
     proof_url?: string | null;
@@ -36,114 +37,124 @@ const PaymentModalSimple = ({ role = "student", onClose, payment }: Props) => {
             return;
         }
 
-        const formData = new FormData();
-        formData.append("amount", amount);
-        formData.append("proof", file);
-        formData.append("mess_id", "1"); // ✅ ADD THIS (temporary fix)
+        try {
+            const formData = new FormData();
+            formData.append("amount", amount);
+            formData.append("proof", file);
 
+            const res = await fetch(
+                `${import.meta.env.VITE_API_URL}/api/payments/simple/upload",
+                {
+                    method: "POST",
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                    body: formData,
+                }
+            );
+
+            const data = await res.json();
+
+            if (!res.ok) {
+                alert(data.message || "Payment failed");
+                return;
+            }
+
+            // ✅ Success message
+            alert("Payment submitted successfully");
+
+            // 🔄 Refresh list
+            const refreshed = await fetch(
+                `${import.meta.env.VITE_API_URL}/api/payments/simple/my",
+                {
+                    headers: { Authorization: `Bearer ${token}` },
+                }
+            );
+
+            const newData = await refreshed.json();
+            setPayments(newData || []);
+
+            // 🔄 Reset form
+            setAmount("");
+            setFile(null);
+
+        } catch (err) {
+            console.error(err);
+            alert("Something went wrong");
+        }
+    };
+
+    const handleAccept = async (id: number) => {
         const res = await fetch(
-            "http://localhost:5000/api/payments/simple/upload",
+            `${import.meta.env.VITE_API_URL}`/api/payments/simple/${id}`,
             {
-                method: "POST",
+                method: "PUT",
                 headers: {
+                    "Content-Type": "application/json",
                     Authorization: `Bearer ${token}`,
                 },
-                body: formData,
+                body: JSON.stringify({ status: "APPROVED" }),
             }
         );
 
-        const data = await res.json();
-
         if (!res.ok) {
-            alert(data.message || "Payment failed");
+            console.error("Accept failed");
             return;
         }
 
         const refreshed = await fetch(
-            "http://localhost:5000/api/payments/simple/my",
+            `${import.meta.env.VITE_API_URL}/api/payments/simple",
             {
                 headers: { Authorization: `Bearer ${token}` },
             }
         );
 
-        const newData = await refreshed.json();
-        setPayments(newData || []);
+        const data = await refreshed.json();
 
-        setAmount("");
-        setFile(null);
+        const filtered = data.filter(
+            (p: any) => p.membership_id === payment?.membership_id
+        );
+
+        setPayments(filtered || []);
     };
 
-    const handleAccept = async (id: number) => {
-    const res = await fetch(
-        `http://localhost:5000/api/payments/simple/${id}`,
-        {
-            method: "PUT",
-            headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify({ status: "APPROVED" }),
-        }
-    );
-
-    if (!res.ok) {
-        console.error("Accept failed");
-        return;
-    }
-
-    const refreshed = await fetch(
-        "http://localhost:5000/api/payments/simple",
-        {
-            headers: { Authorization: `Bearer ${token}` },
-        }
-    );
-
-    const data = await refreshed.json();
-
-    const filtered = data.filter(
-        (p: any) => p.student_name === payment.student_name
-    );
-
-    setPayments(filtered || []);
-};
-
     const handleReject = async (id: number) => {
-    const res = await fetch(
-        `http://localhost:5000/api/payments/simple/${id}`,
-        {
-            method: "PUT",
-            headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify({ status: "REJECTED" }),
+        const res = await fetch(
+            `${import.meta.env.VITE_API_URL}`/api/payments/simple/${id}`,
+            {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify({ status: "REJECTED" }),
+            }
+        );
+
+        if (!res.ok) {
+            console.error("Reject failed");
+            return;
         }
-    );
 
-    if (!res.ok) {
-        console.error("Reject failed");
-        return;
-    }
+        const refreshed = await fetch(
+            `${import.meta.env.VITE_API_URL}/api/payments/simple",
+            {
+                headers: { Authorization: `Bearer ${token}` },
+            }
+        );
 
-    const refreshed = await fetch(
-        "http://localhost:5000/api/payments/simple",
-        {
-            headers: { Authorization: `Bearer ${token}` },
-        }
-    );
+        const data = await refreshed.json();
 
-    const data = await refreshed.json();
+        const filtered = data.filter(
+            (p: any) => p.membership_id === payment?.membership_id
+        );
 
-    const filtered = data.filter(
-        (p: any) => p.student_name === payment.student_name
-    );
-
-    setPayments(filtered || []);
-};
+        setPayments(filtered || []);
+    };
 
     const handleCancel = async (id: number) => {
         await fetch(
-            `http://localhost:5000/api/payments/simple/cancel/${id}`,
+            `${import.meta.env.VITE_API_URL}`/api/payments/simple/cancel/${id}`,
             {
                 method: "PUT",
                 headers: {
@@ -153,7 +164,7 @@ const PaymentModalSimple = ({ role = "student", onClose, payment }: Props) => {
         );
 
         const refreshed = await fetch(
-            "http://localhost:5000/api/payments/simple/my",
+            `${import.meta.env.VITE_API_URL}/api/payments/simple/my",
             {
                 headers: { Authorization: `Bearer ${token}` },
             }
@@ -169,7 +180,7 @@ const PaymentModalSimple = ({ role = "student", onClose, payment }: Props) => {
         if (!token) return;
 
         if (role === "admin" && payment) {
-            fetch(`http://localhost:5000/api/payments/simple`, {
+            fetch(`${import.meta.env.VITE_API_URL}`/api/payments/simple`, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
@@ -177,18 +188,18 @@ const PaymentModalSimple = ({ role = "student", onClose, payment }: Props) => {
                 .then((res) => res.json())
                 .then((data) => {
                     const filtered = data.filter(
-                        (p: any) => p.student_name === payment.student_name
+                        (p: any) => p.membership_id === payment?.membership_id
                     );
                     setPayments(filtered || []);
                 });
         } else {
-            fetch("http://localhost:5000/api/payments/simple/my", {
+            fetch(`${import.meta.env.VITE_API_URL}/api/payments/simple/my", {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
             })
                 .then((res) => res.json())
-                .then((data) => setPayments(data || []));
+                .then((data) => setPayments(Array.isArray(data) ? data : []));
         }
     }, [payment]);
 

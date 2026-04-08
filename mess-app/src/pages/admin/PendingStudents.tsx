@@ -15,7 +15,7 @@ type PendingMembership = {
   created_at?: string;
 };
 
-const API_ROOT = "http://localhost:5000";
+const API_ROOT = `${import.meta.env.VITE_API_URL}";
 
 const PendingStudents = () => {
   const [students, setStudents] = useState<PendingMembership[]>([]);
@@ -64,9 +64,9 @@ const PendingStudents = () => {
      APPROVE / REJECT
   ========================= */
   const handleAction = async (
-  userId: number,
-  action: "approve" | "reject"
-)=> {
+    membershipId: number,
+    action: "approve" | "reject"
+  ) => {
     const ok = window.confirm(
       `Are you sure you want to ${action} this student?`
     );
@@ -77,28 +77,28 @@ const PendingStudents = () => {
         ? "approve-student"
         : "reject-student";
 
-   try {
-  const res = await fetch(
-    `${API_ROOT}/api/admin/${endpoint}/${userId}`,  // ✅ comma added
-    {
-      method: "PUT",
-      headers: {
-        Authorization: `Bearer ${getToken()}`,
-      },
+    try {
+      const res = await fetch(
+        `${API_ROOT}/api/admin/${endpoint}/${membershipId}`,  // ✅ comma added
+        {
+          method: "PUT",
+          headers: {
+            Authorization: `Bearer ${getToken()}`,
+          },
+        }
+      );
+
+      if (!res.ok) {
+        console.error("Action failed");
+        return;
+      }
+
+      // Refresh list after action
+      fetchPending();
+    } catch (err) {
+      console.error("Failed to perform action", err);
     }
-  );
-
-  if (!res.ok) {
-    console.error("Action failed");
-    return;
-  }
-
-  // Refresh list after action
-  fetchPending();
-} catch (err) {
-  console.error("Failed to perform action", err);
-}
-};
+  };
 
   // 🔹 GROUP LUNCH + DINNER REQUESTS
   const groupedStudents = Object.values(
@@ -160,19 +160,29 @@ const PendingStudents = () => {
             <div className="student-actions">
               <button
                 className="btn approve"
-                onClick={() =>
-                  handleAction(s.user_id, "approve")
-                }
+                onClick={() => {
+                  const ok = window.confirm("Approve this request?");
+                  if (!ok) return;
 
+                  s.membership_ids.forEach((id: number) => {
+                    handleAction(id, "approve");
+                  });
+                }}
               >
                 Approve
               </button>
 
+
               <button
                 className="btn reject"
-                onClick={() =>
-                  handleAction(s.user_id, "reject")
-                }
+                onClick={() => {
+                  const ok = window.confirm("Reject this request?");
+                  if (!ok) return;
+
+                  s.membership_ids.forEach((id: number) => {
+                    handleAction(id, "reject");
+                  });
+                }}
               >
                 Reject
               </button>

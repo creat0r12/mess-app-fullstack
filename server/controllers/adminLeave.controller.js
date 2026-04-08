@@ -3,27 +3,29 @@ const db = require("../db");
 /* ================= GET LEAVES ================= */
 const getStudentLeaves = (req, res) => {
   const { status } = req.query;
+  const adminId = req.user.id;
 
   let sql = `
-  SELECT 
-    sl.id,
-    sl.leave_date,
-    sl.reason,
-    sl.status,
-    sl.created_at,
-    sl.verified_at,
-    u.id AS user_id,
-    u.name AS student_name,
-    u.phone
-  FROM student_leaves sl
-  JOIN users u ON sl.user_id = u.id
-`;
+    SELECT 
+      sl.id,
+      sl.leave_date,
+      sl.reason,
+      sl.status,
+      sl.created_at,
+      sl.verified_at,
+      u.name AS student_name,
+      u.phone
+    FROM student_leaves sl
+    JOIN student_mess_membership smm ON sl.membership_id = smm.id
+    JOIN users u ON smm.user_id = u.id
+    JOIN messes m ON smm.mess_id = m.id
+    WHERE m.owner_user_id = ?
+  `;
 
-
-  const params = [];
+  const params = [adminId];
 
   if (status) {
-    sql += " WHERE sl.status = ?";
+    sql += " AND sl.status = ?";
     params.push(status);
   }
 
@@ -42,14 +44,17 @@ const getStudentLeaves = (req, res) => {
 /* ================= APPROVE LEAVE ================= */
 const approveLeave = (req, res) => {
   const { id } = req.params;
+  const adminId = req.user.id;
 
   db.query(
     `
-    UPDATE student_leaves
-    SET status='APPROVED', verified_at=NOW()
-    WHERE id=?
+    UPDATE student_leaves sl
+    JOIN student_mess_membership smm ON sl.membership_id = smm.id
+    JOIN messes m ON smm.mess_id = m.id
+    SET sl.status='APPROVED', sl.verified_at=NOW()
+    WHERE sl.id=? AND m.owner_user_id=?
     `,
-    [id],
+    [id, adminId],
     (err) => {
       if (err) {
         console.error("Approve Leave Error:", err);
@@ -64,14 +69,17 @@ const approveLeave = (req, res) => {
 /* ================= REJECT LEAVE ================= */
 const rejectLeave = (req, res) => {
   const { id } = req.params;
+  const adminId = req.user.id;
 
   db.query(
     `
-    UPDATE student_leaves
-    SET status='REJECTED', verified_at=NOW()
-    WHERE id=?
+    UPDATE student_leaves sl
+    JOIN student_mess_membership smm ON sl.membership_id = smm.id
+    JOIN messes m ON smm.mess_id = m.id
+    SET sl.status='REJECTED', sl.verified_at=NOW()
+    WHERE sl.id=? AND m.owner_user_id=?
     `,
-    [id],
+    [id, adminId],
     (err) => {
       if (err) {
         console.error("Reject Leave Error:", err);
@@ -86,14 +94,17 @@ const rejectLeave = (req, res) => {
 /* ================= REQUEST RETURN ================= */
 const requestReturn = (req, res) => {
   const { id } = req.params;
+  const adminId = req.user.id;
 
   db.query(
     `
-    UPDATE student_leaves
-    SET status='RETURN_REQUESTED', verified_at=NOW()
-    WHERE id=? AND status='APPROVED'
+    UPDATE student_leaves sl
+    JOIN student_mess_membership smm ON sl.membership_id = smm.id
+    JOIN messes m ON smm.mess_id = m.id
+    SET sl.status='RETURN_REQUESTED', sl.verified_at=NOW()
+    WHERE sl.id=? AND sl.status='APPROVED' AND m.owner_user_id=?
     `,
-    [id],
+    [id, adminId],
     (err, result) => {
       if (err) {
         console.error("Request Return Error:", err);

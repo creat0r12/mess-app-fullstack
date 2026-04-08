@@ -1,52 +1,52 @@
 /* =========================
-   BASE
+   BASE (MOBILE FIRST)
 ========================= */
 
 .admin-dashboard {
-  padding: 20px;
+  padding: 16px;
   background: #f8fafc;
   min-height: 100vh;
 }
 
 .title {
-  font-size: 22px;
+  font-size: 20px;
   font-weight: 700;
-  margin-bottom: 18px;
+  margin-bottom: 16px;
   color: #1f2937;
 }
 
 /* =========================
-   MESS STATUS (SINGLE LINE)
+   MESS CARD
 ========================= */
 
 .mess-toggle {
   background: #ffffff;
-  border-radius: 14px;
-  padding: 14px 18px;
+  border-radius: 16px;
+  padding: 16px;
   margin-bottom: 18px;
 
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  flex-direction: column;
+  gap: 10px;
 
-  box-shadow: 0 6px 18px rgba(0,0,0,0.05);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
 }
 
-.mess-left {
+.mess-row {
   display: flex;
   align-items: center;
-  gap: 16px;
+  justify-content: space-between;
+}
+
+.mess-left-group {
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
 .mess-title {
   font-weight: 600;
   font-size: 14px;
-}
-
-.mess-status {
-  display: flex;
-  align-items: center;
-  gap: 6px;
 }
 
 .status-dot {
@@ -55,17 +55,24 @@
   border-radius: 50%;
 }
 
-.status-dot.open {
-  background: #22c55e;
-}
-
-.status-dot.closed {
-  background: #ef4444;
-}
+.status-dot.open { background: #22c55e; }
+.status-dot.closed { background: #ef4444; }
 
 .status-text {
   font-size: 13px;
-  color: #444;
+  margin-left: 2px;
+}
+
+.mess-center {
+  flex: 1;
+  display: flex;
+  justify-content: space-between;
+}
+
+.mess-hint-inline {
+  font-size: 12px;
+  color: #9ca3af;
+  margin-left: auto;
 }
 
 /* =========================
@@ -82,15 +89,13 @@
 .card {
   background: #ffffff;
   border-radius: 16px;
-  padding: 18px;
-
-  box-shadow: 0 8px 22px rgba(0,0,0,0.05);
-  transition: all 0.25s ease;
+  padding: 16px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+  transition: 0.2s;
 }
 
 .card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 12px 28px rgba(0,0,0,0.08);
+  transform: translateY(-2px);
 }
 
 .card p {
@@ -99,13 +104,8 @@
 }
 
 .card h2 {
-  font-size: 26px;
+  font-size: 22px;
   font-weight: 700;
-  margin-top: 6px;
-}
-
-.card.clickable {
-  cursor: pointer;
 }
 
 /* =========================
@@ -113,39 +113,140 @@
 ========================= */
 
 .payment-card {
-  margin-bottom: 18px;
+  display: flex;
+  flex-direction: column;
+  max-height: 260px;
+  overflow-y: auto;
 }
+
+/* HEADER */
 
 .card-header {
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  margin-bottom: 10px;
 }
 
 .card-header h3 {
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 600;
 }
 
-/* push date right */
 .card-header input {
-  margin-left: auto;
   padding: 6px;
   font-size: 12px;
   border-radius: 6px;
   border: 1px solid #ddd;
 }
 
+/* =========================
+   PAYMENT ROW (FINAL FIXED)
+========================= */
+
 .payment-row {
   display: flex;
+  align-items: center;
   justify-content: space-between;
-  padding: 8px 0;
-  border-top: 1px solid #f1f5f9;
-  font-size: 14px;
+
+  padding: 12px 6px;
+  border-bottom: 1px solid #f1f5f9;
+  border-radius: 10px;
 }
 
-.payment-row:first-child {
-  border-top: none;
+.payment-row:active {
+  background: #f8fafc;
+}
+
+/* LEFT SIDE */
+
+.payment-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+}
+
+/* AVATAR */
+
+.avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #22c55e, #4ade80);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* NAME + STATUS */
+
+.name {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.status {
+  font-size: 10px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  margin-left: 6px;
+  background: #f3f4f6;
+}
+
+.status.pending {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+.status.approved {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.status.rejected {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+/* RIGHT SIDE */
+
+.payment-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 90px;
+  justify-content: flex-end;
+}
+
+.amount {
+  font-weight: 600;
+}
+
+/* INFO BUTTON */
+
+.info-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #f1f5f9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+/* SCROLL */
+
+.payment-card::-webkit-scrollbar {
+  width: 4px;
+}
+
+.payment-card::-webkit-scrollbar-thumb {
+  background: #e2e8f0;
+  border-radius: 4px;
 }
 
 /* =========================
@@ -162,24 +263,16 @@
   padding: 12px;
   border-radius: 10px;
   border: none;
-
   background: linear-gradient(135deg, #22c55e, #16a34a);
   color: white;
-
   font-weight: 600;
-  cursor: pointer;
 }
 
 .secondary-btn {
   padding: 12px;
   border-radius: 10px;
   border: none;
-
   background: #e5e7eb;
-  color: #111;
-
-  font-weight: 500;
-  cursor: pointer;
 }
 
 /* =========================
@@ -192,40 +285,19 @@
 }
 
 /* =========================
-   MOBILE
+   DESKTOP
 ========================= */
 
-@media (max-width: 768px) {
-  .cards-grid {
-    grid-template-columns: 1fr;
+@media (min-width: 768px) {
+  .admin-dashboard {
+    padding: 20px;
   }
-}
 
-
-.mess-toggle.clickable {
-  cursor: pointer;
-}
-
-.mess-dropdown {
-  margin-top: 10px;
-  animation: fadeDown 0.25s ease;
-}
-
-@keyframes fadeDown {
-  from {
-    opacity: 0;
-    transform: translateY(-8px);
+  .title {
+    font-size: 22px;
   }
-  to {
-    opacity: 1;
-    transform: translateY(0);
+
+  .card h2 {
+    font-size: 26px;
   }
-}
-
-
-.mess-dropdown-card {
-  background: #fff;
-  border-radius: 14px;
-  padding: 14px;
-  box-shadow: 0 8px 20px rgba(0,0,0,0.05);
 }

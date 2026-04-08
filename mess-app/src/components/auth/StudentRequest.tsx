@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import "../../styles/authCard.css";
 
-const API = "http://localhost:5000";
+const API = `${import.meta.env.VITE_API_URL}";
 
 function StudentRequest() {
   // 🔐 SET AUTH MODE AS STUDENT

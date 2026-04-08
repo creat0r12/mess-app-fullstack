@@ -6,7 +6,7 @@ import PaymentSettingsModal from "../../components/common/PaymentSettingsModal";
 import MessSettings from "./MessSettings";
 import PaymentModalSimple from "../../components/common/payment/PaymentModalSimple";
 
-/* ======  =========== TYPES ================= */
+/* ====== TYPES ================= */
 
 type Payment = {
   id: number;
@@ -26,10 +26,13 @@ type PaymentSettings = {
 /* ================= COMPONENT ================= */
 
 const AdminDashboard = () => {
+  const [expanded, setExpanded] = useState(false);
+  const [messOpen, setMessOpen] = useState(false);
+
   const navigate = useNavigate();
 
-  /* ===== CONFIG ===== */
-  const API = "http://localhost:5000";
+  /* ===== CONFIGshowMessDropdown  ===== */
+  const API = `${import.meta.env.VITE_API_URL}";
   const token = localStorage.getItem("token");
   const headers = { Authorization: `Bearer ${token}` };
 
@@ -53,9 +56,21 @@ const AdminDashboard = () => {
   /* ===== NEW: PAYMENT MODAL ===== */
   const [showPaymentsModal, setShowPaymentsModal] = useState(false);
 
+
+
+  const loadMessStatus = async () => {
+    try {
+      const res = await axios.get(`${API}/api/mess-settings`, { headers });
+      setMessOpen(res.data?.mess_open === 1);
+    } catch (err) {
+      console.error("Failed to load mess status", err);
+    }
+  };
+
   /* ================= LOAD DASHBOARD ================= */
 
   useEffect(() => {
+
     if (!token) return;
 
     const loadDashboard = async () => {
@@ -75,7 +90,9 @@ const AdminDashboard = () => {
         ]);
 
         const activeList = Array.isArray(activeRes.data) ? activeRes.data : [];
-        const pendingList = Array.isArray(pendingRes.data) ? pendingRes.data : [];
+        const pendingList = Array.isArray(pendingRes.data)
+          ? pendingRes.data
+          : [];
 
         const activeCount = activeList.length;
         const pendingCount = pendingList.length;
@@ -86,16 +103,15 @@ const AdminDashboard = () => {
 
         setLeaveCount(leavesRes.data.active_leaves || 0);
 
-
         setPayments(Array.isArray(paymentsRes.data) ? paymentsRes.data : []);
         setPaymentSettings(paymentSettingsRes.data || null);
-
       } catch (err) {
         console.error("Dashboard load failed", err);
       }
     };
 
     loadDashboard();
+    loadMessStatus();
   }, [token]);
 
   /* ================= FILTER PAYMENTS ================= */
@@ -107,170 +123,235 @@ const AdminDashboard = () => {
   /* ================= SAVE PAYMENT SETTINGS ================= */
 
   const handleSavePaymentSettings = async (payload: any) => {
-  try {
-    const form = new FormData();
+    try {
+      const form = new FormData();
 
-    form.append("upi_enabled", String(payload.upi_enabled));
-    form.append("cash_enabled", String(payload.cash_enabled));
-    form.append("upi_id", payload.upi_id || "");
+      form.append("upi_enabled", String(payload.upi_enabled));
+      form.append("cash_enabled", String(payload.cash_enabled));
+      form.append("upi_id", payload.upi_id || "");
 
-    if (payload.qrFile) {
-      form.append("qr", payload.qrFile);
+      if (payload.qrFile) {
+        form.append("qr", payload.qrFile);
+      }
+
+      form.append("boys_one_time", String(payload.boys_one_time || 0));
+      form.append("boys_two_time", String(payload.boys_two_time || 0));
+      form.append("girls_one_time", String(payload.girls_one_time || 0));
+      form.append("girls_two_time", String(payload.girls_two_time || 0));
+
+      await axios.post(`${API}/api/admin/payment-settings`, form, {
+        headers: {
+          ...headers,
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      const res = await axios.get(`${API}/api/admin/payment-settings`, {
+        headers,
+      });
+
+      setPaymentSettings(res.data);
+      setShowPaymentSettings(false);
+    } catch (err) {
+      console.error("Payment settings error:", err);
     }
-
-    // ✅ NEW PRICING FIELDS
-    form.append("boys_one_time", String(payload.boys_one_time || 0));
-    form.append("boys_two_time", String(payload.boys_two_time || 0));
-    form.append("girls_one_time", String(payload.girls_one_time || 0));
-    form.append("girls_two_time", String(payload.girls_two_time || 0));
-
-    await axios.post(`${API}/api/admin/payment-settings`, form, {
-      headers: {
-        ...headers,
-        "Content-Type": "multipart/form-data",
-      },
-    });
-
-    const res = await axios.get(`${API}/api/admin/payment-settings`, {
-      headers,
-    });
-
-    setPaymentSettings(res.data);
-    setShowPaymentSettings(false);
-
-  } catch (err) {
-    console.error("Payment settings error:", err);
-  }
-};
+  };
 
   /* ================= UI ================= */
 
   return (
-  <div className="admin-dashboard">
+    <div className="admin-dashboard">
+      <h2 className="title">Dashboard</h2>
 
-    <h2 className="title">Dashboard</h2>
+      {/* ================= MESS STATUS ================= */}
+      <div className="mess-toggle">
 
-    {/* ================= MESS STATUS (CLEAN SINGLE ROW) ================= */}
-    <div className="mess-toggle">
+        {/* TOP ROW */}
+        <div className="mess-row">
 
-      <div className="mess-left">
-        <span className="mess-title">Mess Status</span>
+          <div className="mess-title">Mess Status</div>
 
-        <div className="mess-status">
-          <span className="status-dot closed"></span> {/* make dynamic later */}
-          <span className="status-text">Closed</span>
+          <div
+            className="mess-center"
+            onClick={() => {
+              if (!messOpen) return;        // ❗ block when OFF
+              setExpanded(prev => !prev);
+            }}
+          >
+            <span className={`status-dot ${messOpen ? "open" : "closed"}`} />
+            <span className="status-text">
+              {messOpen ? "Open" : "Closed"}
+            </span>
+
+            {!expanded && messOpen && (
+              <span className="mess-hint-inline">
+                Click to manage
+              </span>
+            )}
+          </div>
+
+          <label
+            className="switch"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <input
+              type="checkbox"
+              checked={messOpen}
+              onChange={async (e) => {
+                const value = e.target.checked;
+
+                setMessOpen(value);
+
+                // ✅ collapse immediately when OFF
+                if (!value) {
+                  setExpanded(false);
+                }
+
+                try {
+                  const form = new FormData();
+                  form.append("mess_open", value ? "1" : "0");
+
+                  await axios.put(`${API}/api/mess-settings`, form, {
+                    headers,
+                  });
+                } catch (err) {
+                  console.error("Toggle update failed", err);
+                }
+              }}
+            />
+            <span className="slider"></span>
+          </label>
+
+        </div>
+
+
+
+
+        {/* EXPANDED SETTINGS */}
+        {expanded && (
+          <div className="mess-expanded">
+            <MessSettings />
+          </div>
+        )}
+      </div>
+
+      {/* ================= STATS ================= */}
+      <div className="cards-grid">
+        <div className="card">
+          <p>Total Students</p>
+          <h2>{total}</h2>
+        </div>
+
+        <div
+          className="card clickable"
+          onClick={() => navigate("/admin/active")}
+        >
+          <p>Active</p>
+          <h2>{active}</h2>
+        </div>
+
+        <div
+          className="card clickable"
+          onClick={() => navigate("/admin/pending")}
+        >
+          <p>Pending</p>
+          <h2>{pending}</h2>
+        </div>
+
+        <div
+          className="card clickable"
+          onClick={() => navigate("/admin/student-leaves")}
+        >
+          <p>Leaves</p>
+          <h2>{leaveCount}</h2>
         </div>
       </div>
 
-      {/* keep your existing toggle inside MessSettings */}
-      <MessSettings />
+      {/* ================= TODAY PAYMENT ================= */}
+      <div className="card payment-card">
+        <div className="card-header">
+          <h3>Today’s Payments</h3>
 
-    </div>
+          <input
+            type="date"
+            value={filterDate}
+            onChange={(e) => setFilterDate(e.target.value)}
+          />
+        </div>
 
-    {/* ================= STATS ================= */}
-    <div className="cards-grid">
+        {filteredPayments.length === 0 ? (
+          <p className="muted">No payments today</p>
+        ) : (
+          filteredPayments.slice(0, 3).map((p) => (
+            <div key={p.id} className="payment-row">
 
-      <div className="card">
-        <p>Total Students</p>
-        <h2>{total}</h2>
+              <div className="payment-left">
+                <div className="avatar">
+                  {p.student_name.charAt(0)}
+                </div>
+                <span className="name">{p.student_name}</span>
+                <span className={`status ${p.status.toLowerCase()}`}>
+                  {p.status}
+                </span>
+              </div>
+
+              <div className="payment-right">
+                <span className="amount">₹{p.amount}</span>
+
+                <span
+                  className="info-btn"
+                  onClick={() => setShowPaymentsModal(true)}
+                >
+                  ℹ️
+                </span>
+              </div>
+
+            </div>
+          ))
+        )}
       </div>
 
-      <div
-        className="card clickable"
-        onClick={() => navigate("/admin/active")}
-      >
-        <p>Active</p>
-        <h2>{active}</h2>
+      {/* ================= ACTIONS ================= */}
+      <div className="actions-row">
+        <button
+          className="primary-btn"
+          onClick={() => navigate("/admin/payments")}
+        >
+          View All Payments
+        </button>
+
+        <button
+          className="secondary-btn"
+          onClick={() => setShowPaymentSettings(true)}
+        >
+          Payment Settings
+        </button>
       </div>
 
-      <div
-        className="card clickable"
-        onClick={() => navigate("/admin/pending")}
-      >
-        <p>Pending</p>
-        <h2>{pending}</h2>
-      </div>
-
-      <div
-        className="card clickable"
-        onClick={() => navigate("/admin/student-leaves")}
-      >
-        <p>Leaves</p>
-        <h2>{leaveCount}</h2>
-      </div>
-
-    </div>
-
-    {/* ================= TODAY PAYMENT ================= */}
-    <div className="card payment-card">
-
-      <div className="card-header">
-        <h3>Today’s Payments</h3>
-
-        <input
-          type="date"
-          value={filterDate}
-          onChange={(e) => setFilterDate(e.target.value)}
+      {/* ================= MODALS ================= */}
+      {showPaymentsModal && (
+        <PaymentModalSimple
+          role="admin"
+          onClose={() => setShowPaymentsModal(false)}
         />
-      </div>
-
-      {filteredPayments.length === 0 ? (
-        <p className="muted">No payments today</p>
-      ) : (
-        filteredPayments.slice(0, 3).map((p) => (
-          <div key={p.id} className="payment-row">
-            <span>{p.student_name}</span>
-            <span>₹{p.amount}</span>
-          </div>
-        ))
       )}
 
-    </div>
-
-    {/* ================= ACTIONS ================= */}
-    <div className="actions-row">
-
-      <button
-        className="primary-btn"
-        onClick={() => navigate("/admin/payments")}
-      >
-        View All Payments
-      </button>
-
-      <button
-        className="secondary-btn"
-        onClick={() => setShowPaymentSettings(true)}
-      >
-        Payment Settings
-      </button>
-
-    </div>
-
-    {/* ================= MODALS ================= */}
-    {showPaymentsModal && (
-      <PaymentModalSimple
-        role="admin"
-        onClose={() => setShowPaymentsModal(false)}
-      />
-    )}
-
-    {showPaymentSettings && (
-      <PaymentSettingsModal
-        settings={
-          paymentSettings ?? {
-            upi_enabled: 0,
-            cash_enabled: 0,
-            upi_id: null,
-            qr_image: null,
+      {showPaymentSettings && (
+        <PaymentSettingsModal
+          settings={
+            paymentSettings ?? {
+              upi_enabled: 0,
+              cash_enabled: 0,
+              upi_id: null,
+              qr_image: null,
+            }
           }
-        }
-        onClose={() => setShowPaymentSettings(false)}
-        onSave={handleSavePaymentSettings}
-      />
-    )}
-
-  </div>
-);
+          onClose={() => setShowPaymentSettings(false)}
+          onSave={handleSavePaymentSettings}
+        />
+      )}
+    </div>
+  );
 };
 
 export default AdminDashboard;

@@ -3,64 +3,150 @@
 }
 
 .student-leave-page h2 {
-  margin-bottom: 15px;
+  margin-bottom: 20px;
 }
 
+/* TEXT */
 .muted {
   color: #777;
+  font-size: 13px;
 }
 
+/* MAIN CARD */
 .leave-card {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background: #f9f9f9;
-  padding: 15px;
-  border-radius: 8px;
-  margin-bottom: 12px;
+  background: #ffffff;
+  border-radius: 12px;
+  margin-bottom: 16px;
+  padding: 16px;
   border-left: 5px solid #ffa500;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+/* HEADER */
+.leave-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
 .leave-info h4 {
-  margin: 0 0 5px;
+  margin: 0;
+  font-size: 16px;
 }
 
+/* CHILD CARDS */
+.leave-card .leave-card {
+  background: #f7f9fb;
+  border-left: 4px solid #ddd;
+  margin-top: 10px;
+  padding: 12px;
+  border-radius: 8px;
+}
+
+/* TEXT */
 .leave-info p {
-  margin: 3px 0;
-  font-size: 14px;
+  margin: 2px 0;
+  font-size: 13px;
 }
 
 .reason {
   font-style: italic;
+  color: #555;
 }
 
+/* STATUS */
+.leave-status {
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 11px;
+  display: inline-block;
+}
+
+.leave-status.pending {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.leave-status.approved {
+  background: #d4edda;
+  color: #155724;
+}
+
+.leave-status.rejected {
+  background: #f8d7da;
+  color: #721c24;
+}
+
+.leave-status.return_requested {
+  background: #cce5ff;
+  color: #004085;
+}
+
+/* ACTIONS */
 .leave-actions {
+  margin-top: 8px;
   display: flex;
-  gap: 10px;
+  gap: 8px;
+}
+
+/* BUTTONS */
+button {
+  border: none;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  cursor: pointer;
 }
 
 .approve-btn {
   background: #2ecc71;
-  border: none;
-  padding: 8px 12px;
   color: white;
-  border-radius: 5px;
-  cursor: pointer;
 }
 
 .reject-btn {
   background: #e74c3c;
-  border: none;
-  padding: 8px 12px;
   color: white;
-  border-radius: 5px;
-  cursor: pointer;
 }
 
-.approve-btn:hover {
-  background: #27ae60;
+.present-btn {
+  background: #3498db;
+  color: white;
 }
 
-.reject-btn:hover {
-  background: #c0392b;
+/* NEW MANAGE BUTTON */
+.manage-btn {
+  margin-top: 6px;
+  background: #6c5ce7;
+  color: white;
+  font-size: 12px;
+  padding: 5px 10px;
+}
+
+.manage-btn:hover {
+  background: #5a4bd1;
+}
+
+/* HOVER */
+.leave-card:hover {
+  transform: translateY(-2px);
+  transition: 0.2s ease;
+}
+
+
+.search-bar {
+  margin: 15px 0;
+  display: flex;
+  justify-content: center;
+}
+
+.search-bar input {
+  width: 300px;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  outline: none;
+}
+
+.search-bar input:focus {
+  border-color: #4caf50;
 }

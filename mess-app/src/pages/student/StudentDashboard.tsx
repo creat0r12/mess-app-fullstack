@@ -1,7 +1,15 @@
 import { useEffect, useState } from "react";
 import "../../styles/studentDashboard.css";
 import PaymentModalSimple from "../../components/common/payment/PaymentModalSimple";
-const API = "http://localhost:5000";
+const API = `${import.meta.env.VITE_API_URL}";
+
+
+type LeaveStatus =
+  | "PENDING"
+  | "APPROVED"
+  | "REJECTED"
+  | "RETURN_REQUESTED"
+  | "RETURNED";
 
 const StudentDashboard = () => {
   const token = localStorage.getItem("token");
@@ -15,16 +23,16 @@ const StudentDashboard = () => {
   // 🔹 LEAVE STATES
   const [leaveDate, setLeaveDate] = useState("");
   const [leaveReason, setLeaveReason] = useState("");
-  const [leaveStatus, setLeaveStatus] = useState<string | null>(null);
+  const [leaveStatus, setLeaveStatus] = useState<LeaveStatus | null>(null);
   const [leaveLoading, setLeaveLoading] = useState(false);
 
 
 
 
   const hasLeaveRequest =
-    leaveStatus !== null &&
-    leaveStatus !== undefined &&
-    leaveStatus !== "RETURNED";
+    leaveStatus === "PENDING" ||
+    leaveStatus === "APPROVED" ||
+    leaveStatus === "RETURN_REQUESTED";
 
   /* ================= LOAD STUDENT ================= */
   useEffect(() => {
@@ -190,7 +198,7 @@ const StudentDashboard = () => {
       <div className="card">
         <h3>Leave Request</h3>
 
-        {hasLeaveRequest && (
+        {leaveStatus && (
           <div className="status-box">
             <p>
               <strong>Status:</strong>{" "}
@@ -199,6 +207,7 @@ const StudentDashboard = () => {
               </span>
             </p>
 
+            {/* ACTIVE STATES */}
             {leaveStatus === "PENDING" && (
               <p className="muted">Waiting for admin approval ⏳</p>
             )}
@@ -234,12 +243,17 @@ const StudentDashboard = () => {
               </>
             )}
 
-            {leaveStatus === "RETURNED" && (
-              <p className="muted">You can apply again after 24h</p>
+            {/* NON-BLOCKING STATES */}
+            {leaveStatus === "REJECTED" && (
+              <p className="error-msg">
+                Leave rejected ❌ — You can apply again
+              </p>
             )}
 
-            {leaveStatus === "REJECTED" && (
-              <p className="error-msg">Leave rejected ❌</p>
+            {leaveStatus === "RETURNED" && (
+              <p className="muted">
+                You can apply again after 24h
+              </p>
             )}
           </div>
         )}

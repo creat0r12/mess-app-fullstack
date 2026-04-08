@@ -25,7 +25,7 @@ const StudentSetPassword = () => {
 
     try {
       const res = await fetch(
-        "http://localhost:5000/api/students/set-password",
+        `${import.meta.env.VITE_API_URL}/api/students/set-password",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

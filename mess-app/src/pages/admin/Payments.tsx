@@ -3,7 +3,7 @@ import { getToken } from "../../utils/auth";
 import "../../styles/Payments.css";
 import PaymentModalSimple from "../../components/common/payment/PaymentModalSimple";
 
-const API = "http://localhost:5000";
+const API = `${import.meta.env.VITE_API_URL}";
 
 /* ================= TYPES ================= */
 
