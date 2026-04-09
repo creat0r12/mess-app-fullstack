@@ -728,9 +728,8 @@ exports.getActiveMesses = (req, res) => {
       m.email,
       m.address,
       m.description,
-      u.name AS owner_name,
+      COALESCE(u.name, 'Unknown') AS owner_name,
 
-      
       ps.boys_one_time,
       ps.boys_two_time,
       ps.girls_one_time,
@@ -738,11 +737,11 @@ exports.getActiveMesses = (req, res) => {
 
     FROM messes m
 
-    JOIN users u 
+    LEFT JOIN users u   -- 🔥 CHANGE JOIN → LEFT JOIN
       ON m.owner_user_id = u.id
 
     LEFT JOIN payment_settings ps 
-      ON ps.mess_id = m.id   -- ✅ VERY IMPORTANT
+      ON ps.mess_id = m.id
 
     WHERE m.status = 'ACTIVE'
 
@@ -750,8 +749,11 @@ exports.getActiveMesses = (req, res) => {
     `,
     (err, results) => {
       if (err) {
-        console.error("Get active messes error:", err);
-        return res.status(500).json({ message: "DB error" });
+        console.error("❌ Get active messes error FULL:", err);
+        return res.status(500).json({
+          message: "DB error",
+          error: err.message  // 🔥 ADD THIS FOR DEBUG
+        });
       }
 
       res.json(results);
