@@ -9,30 +9,16 @@ const app = express();
    GLOBAL MIDDLEWARES
 ========================= */
 
-// ✅ FINAL CORS FIX (PRODUCTION READY)
-const allowedOrigins = [
-  "http://localhost:5173",
-  "https://mess-app-fullstack-1.onrender.com"
-];
-
+// ✅ SIMPLE & STABLE CORS (fixes your issue)
 app.use(cors({
-  origin: function (origin, callback) {
-    // allow requests without origin (Postman, mobile apps)
-    if (!origin) return callback(null, true);
-
-    if (allowedOrigins.includes(origin)) {
-      return callback(null, true);
-    } else {
-      return callback(new Error("CORS not allowed"));
-    }
-  },
+  origin: true,
   credentials: true
 }));
 
-// ❌ REMOVE THIS LINE (it crashes server)
-// app.options("*", cors());
-
+// ✅ JSON parser
 app.use(express.json());
+
+// ✅ Static uploads
 app.use("/uploads", express.static("uploads"));
 
 /* =========================
