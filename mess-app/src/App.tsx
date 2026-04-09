@@ -23,6 +23,7 @@ import PlatformAdminLogin from "./pages/platform/PlatformAdminLogin";
 import PlatformMessRequests from "./pages/platform/PlatformMessRequests";
 import Settings from "./pages/settings/Settings";
 
+import chef from "./assets/chef.png";
 import "./App.css";
 import { useState } from "react";
 
@@ -79,7 +80,7 @@ const Landing = () => {
 
         {/* RIGHT SIDE AVATAR */}
         <img
-          src="/src/assets/chef.png"
+          src={chef}
           alt="chef"
           className="hero-avatar"
         />
@@ -90,73 +91,73 @@ const Landing = () => {
          FEATURES (3 CARDS)
       ====================== */}
       <div id="features" className="features-section">
-  <div className="features-container">
+        <div className="features-container">
 
-    <div className="feature-card">
-      <div className="feature-icon">🔍</div>
-      <h3>Find a Mess Nearby</h3>
-      <p>
-        Explore available messes and choose the best fit for you.
-      </p>
-      <Link to="/find-mess">
-        <button className="feature-btn">Discover Messes</button>
-      </Link>
-    </div>
+          <div className="feature-card">
+            <div className="feature-icon">🔍</div>
+            <h3>Find a Mess Nearby</h3>
+            <p>
+              Explore available messes and choose the best fit for you.
+            </p>
+            <Link to="/find-mess">
+              <button className="feature-btn">Discover Messes</button>
+            </Link>
+          </div>
 
-    <div className="feature-card">
-      <div className="feature-icon">🏪</div>
-      <h3>Register Your Mess</h3>
-      <p>
-        Set up your mess on our platform and reach more students.
-      </p>
-      <Link to="/create-mess">
-        <button className="feature-btn green">Add Your Mess</button>
-      </Link>
-    </div>
+          <div className="feature-card">
+            <div className="feature-icon">🏪</div>
+            <h3>Register Your Mess</h3>
+            <p>
+              Set up your mess on our platform and reach more students.
+            </p>
+            <Link to="/create-mess">
+              <button className="feature-btn green">Add Your Mess</button>
+            </Link>
+          </div>
 
-    {/* ✅ UPDATED CONTACT CARD */}
-    <div className="feature-card flip-card">
+          {/* ✅ UPDATED CONTACT CARD */}
+          <div className="feature-card flip-card">
 
-  <div className={`flip-inner ${showSupport ? "flipped" : ""}`}>
+            <div className={`flip-inner ${showSupport ? "flipped" : ""}`}>
 
-    {/* FRONT */}
-    <div className="flip-front">
-      <div className="feature-icon">📞</div>
-      <h3>Contact Support</h3>
-      <p>
-        Need help? Reach out to us anytime for assistance.
-      </p>
+              {/* FRONT */}
+              <div className="flip-front">
+                <div className="feature-icon">📞</div>
+                <h3>Contact Support</h3>
+                <p>
+                  Need help? Reach out to us anytime for assistance.
+                </p>
 
-      <button
-        className="feature-btn"
-        onClick={() => setShowSupport(true)}
-      >
-        Get Help
-      </button>
-    </div>
+                <button
+                  className="feature-btn"
+                  onClick={() => setShowSupport(true)}
+                >
+                  Get Help
+                </button>
+              </div>
 
-    {/* BACK */}
-    <div className="flip-back">
-      <div className="feature-icon">📞</div>
-      <h3>Contact Details</h3>
+              {/* BACK */}
+              <div className="flip-back">
+                <div className="feature-icon">📞</div>
+                <h3>Contact Details</h3>
 
-      <p><strong>📱</strong> 9322824378</p>
-      <p><strong>📧</strong> kushalpatil12112@gmail.com</p>
+                <p><strong>📱</strong> 9322824378</p>
+                <p><strong>📧</strong> kushalpatil12112@gmail.com</p>
 
-      <button
-        className="feature-btn"
-        onClick={() => setShowSupport(false)}
-      >
-        Back
-      </button>
-    </div>
+                <button
+                  className="feature-btn"
+                  onClick={() => setShowSupport(false)}
+                >
+                  Back
+                </button>
+              </div>
 
-  </div>
+            </div>
 
-</div>
+          </div>
 
-  </div>
-</div>
+        </div>
+      </div>
 
     </div>
   );
