@@ -29,8 +29,8 @@ app.use(cors({
   credentials: true
 }));
 
-// ✅ IMPORTANT: handle preflight requests
-app.options("*", cors());
+// ❌ REMOVE THIS LINE (it crashes server)
+// app.options("*", cors());
 
 app.use(express.json());
 app.use("/uploads", express.static("uploads"));
