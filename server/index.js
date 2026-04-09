@@ -9,16 +9,28 @@ const app = express();
    GLOBAL MIDDLEWARES
 ========================= */
 
-// ✅ CLEAN & STABLE CORS
-const corsOptions = {
-  origin: [
-    "http://localhost:5173",
-    "https://mess-app-fullstack-1.onrender.com"
-  ],
-  credentials: true
-};
+// ✅ FINAL CORS FIX (PRODUCTION READY)
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://mess-app-fullstack-1.onrender.com"
+];
 
-app.use(cors(corsOptions)); // ✅ enough (handles preflight automatically)
+app.use(cors({
+  origin: function (origin, callback) {
+    // allow requests without origin (Postman, mobile apps)
+    if (!origin) return callback(null, true);
+
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    } else {
+      return callback(new Error("CORS not allowed"));
+    }
+  },
+  credentials: true
+}));
+
+// ✅ IMPORTANT: handle preflight requests
+app.options("*", cors());
 
 app.use(express.json());
 app.use("/uploads", express.static("uploads"));
@@ -68,7 +80,7 @@ app.use((err, req, res, next) => {
   console.error("❌ Server Error:", err);
 
   res.status(500).json({
-    message: "Internal Server Error",
+    message: err.message || "Internal Server Error",
   });
 });
 
