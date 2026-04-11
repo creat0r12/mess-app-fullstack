@@ -50,7 +50,7 @@ exports.requestStudent = (req, res) => {
   const params = email ? [phone, email] : [phone];
 
 
-  db.query(checkSql, [phone, email || null], (err, existing) => {
+  db.query(checkSql, params, (err, existing) => {
     if (err) {
       console.error("CHECK STUDENT ERROR:", err);
       return res.status(500).json({ message: "DB error" });
@@ -216,24 +216,46 @@ exports.loginStudent = (req, res) => {
         return res.status(401).json({ message: "Incorrect password" });
       }
 
-      const token = jwt.sign(
-        {
-          id: users[0].id,
-          role: "STUDENT",
-        },
-        process.env.JWT_SECRET,
-        { expiresIn: "7d" }
-      );
+      // 🔥 GET membership_id
+      db.query(
+        "SELECT id FROM student_mess_membership WHERE user_id = ? LIMIT 1",
+        [users[0].id],
+        (err2, memberships) => {
+          if (err2) {
+            console.error("Membership fetch error:", err2);
+            return res.status(500).json({ message: "DB error" });
+          }
 
-      res.json({
-        success: true,
-        token,
-        student: {
-          id: users[0].id,
-          name: users[0].name,
-          phone: users[0].phone,
-        },
-      });
+          if (memberships.length === 0) {
+            return res.status(400).json({
+              message: "No active mess membership found",
+            });
+          }
+
+          const membership_id = memberships[0].id;
+
+          // 🔥 NEW TOKEN
+          const token = jwt.sign(
+            {
+              id: users[0].id,
+              role: "STUDENT",
+              membership_id: membership_id,
+            },
+            process.env.JWT_SECRET,
+            { expiresIn: "7d" }
+          );
+
+          res.json({
+            success: true,
+            token,
+            student: {
+              id: users[0].id,
+              name: users[0].name,
+              phone: users[0].phone,
+            },
+          });
+        }
+      );
     }
   );
 };

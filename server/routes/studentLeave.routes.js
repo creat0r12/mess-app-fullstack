@@ -1,5 +1,5 @@
 const express = require("express");
-const { studentAuth } = require("../middlewares/auth.middleware");
+const router = express.Router();
 
 const {
   submitLeave,
@@ -8,18 +8,22 @@ const {
   confirmReturn,
 } = require("../controllers/studentLeave.controller");
 
-const router = express.Router();
+const { studentAuth } = require("../middlewares/auth.middleware");
 
-// Student submits leave request
+/* =========================
+   STUDENT LEAVE ROUTES
+========================= */
+
+// 📝 Submit leave request
 router.post("/leave", studentAuth, submitLeave);
 
-// Latest leave (dashboard)
+// 📊 Get latest leave (dashboard)
 router.get("/leave", studentAuth, getMyLeave);
 
-// 🔥 Full leave history (future use)
+// 📜 Get full leave history
 router.get("/leave/history", studentAuth, getMyLeaveHistory);
 
-// Student confirms return
+// 🔁 Confirm return
 router.put("/leave/confirm-return", studentAuth, confirmReturn);
 
 module.exports = router;
